@@ -19,12 +19,12 @@ USE `mysql`;
 
 --  テーブル mysql.user の構造をダンプしています
 CREATE TABLE IF NOT EXISTS `user` (
-  `userID` int NOT NULL,
-  `authToken` int NOT NULL,
-  `userName` text,
-  PRIMARY KEY (`authToken`),
-  UNIQUE KEY `authToken` (`authToken`),
-  UNIQUE KEY `userID` (`userID`)
+  `ID` int NOT NULL,
+  `privateKey` int NOT NULL,
+  `name` text,
+  PRIMARY KEY (`privateKey`),
+  UNIQUE KEY `privateKey` (`privateKey`),
+  UNIQUE KEY `ID` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='ユーザーデータを管理。CyberAgentのチャレンジ用。';
 
 -- エクスポートするデータが選択されていません

@@ -25,17 +25,17 @@ var DBMap = &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
 //User : ユーザー情報を管理
 type User struct {
-	id    string `db:"ID, primarykey` //ユーザーID
-	name  string `db:"name"`          //ユーザー名
-	token string `db:"token"`         //認証トークン
+	id         string             `db:"ID, primarykey` //ユーザーID
+	name       string             `db:"name"`          //ユーザー名
+	privateKey ed25519.PrivateKey `db:"privateKey"`    //認証トークン
 
 }
 
 func main() {
 	routeCreater := mux.NewRouter()
 
-	routeCreater.Host("http://localhost:8080")
-	routeCreater.PathPrefix("http")
+	routeCreater.Host("https://localhost:8080")
+	routeCreater.PathPrefix("https")
 	routeCreater.Methods("GET", "POST", "PUT")
 	routeCreater.Headers("X-Requested-With", "XMLHttpRequest")
 
@@ -64,6 +64,8 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	//ユーザーIDから秘密鍵生成用のシードを生成
 	b, _ := hex.DecodeString(newUser.id)
 	privateKey := ed25519.PrivateKey(b)
+	newUser.privateKey = privateKey
+
 	jsonToken := paseto.JSONToken{
 		Audience:   "Audience",                       // 利用ユーザー判別するユニーク値
 		Issuer:     "Issuer",                         // 利用システム
