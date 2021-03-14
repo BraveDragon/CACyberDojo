@@ -20,11 +20,14 @@ USE `mysql`;
 --  テーブル mysql.user の構造をダンプしています
 CREATE TABLE IF NOT EXISTS `user` (
   `ID` int NOT NULL,
-  `privateKey` int NOT NULL,
+  `privateKey` BINARY NOT NULL,
   `name` text,
-  PRIMARY KEY (`privateKey`),
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `ID` (`ID`),
+  UNIQUE KEY `name` (`name`),
   UNIQUE KEY `privateKey` (`privateKey`),
-  UNIQUE KEY `ID` (`ID`)
+  
+  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='ユーザーデータを管理。CyberAgentのチャレンジ用。';
 
 -- エクスポートするデータが選択されていません
