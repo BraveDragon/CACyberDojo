@@ -194,6 +194,8 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 
 }
 
+//トークンのチェック
+//ユーザー情報取得はuserGet_impl()に丸投げ
 func userGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -212,6 +214,7 @@ func userGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 	}
 }
 
+//ユーザー情報取得処理
 func userGet_impl(w http.ResponseWriter, r *http.Request) {
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
@@ -247,6 +250,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//jsonTokenからユーザーを取得
 func getOneUser(jsonToken paseto.JSONToken) (User, error) {
 	id := jsonToken.Get("ID")
 	loginUser := User{}
@@ -260,7 +264,7 @@ func getOneUser(jsonToken paseto.JSONToken) (User, error) {
 }
 
 func userUpdate(w http.ResponseWriter, r *http.Request) {
-	//TODO: 誰がログインしているかをチェック
+	// 誰がログインしているかをチェック
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
