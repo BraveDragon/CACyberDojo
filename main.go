@@ -6,7 +6,6 @@ package main
 //https://github.com/sohamkamani/jwt-go-example
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"CACyberDojo/DataBase"
+	"CACyberDojo/DataBase/userhandler"
 	"CACyberDojo/commonErrors"
 
 	"github.com/go-gorp/gorp"
@@ -29,8 +30,8 @@ var decoder = schema.NewDecoder()
 
 //DB に接続
 //DB : データベース本体
-var DB, _ = sql.Open("mysql", "root:@APIDB")
-var DBMap = &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+var DB = DataBase.Init()
+var DBMap = &gorp.DbMap{Db: DataBase.DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
 //トークン生成用の定数類
 //フッター
@@ -40,12 +41,6 @@ const footer = "FOOTER"
 const expirationTime = 30 * time.Minute
 
 //User : ユーザー情報を管理
-type User struct {
-	id         string             `db:"id, primarykey` //ユーザーID
-	name       string             `db:"name"`          //ユーザー名
-	privateKey ed25519.PrivateKey `db:"privateKey"`    //認証トークンの秘密鍵
-
-}
 
 func main() {
 	routeCreater := mux.NewRouter()
@@ -57,7 +52,8 @@ func main() {
 
 	//エンドポイントを用意
 	//ユーザー作成
-	routeCreater.HandleFunc("/user/create/{name}", userCreate).Methods("POST").Queries("name", "{name}")
+	routeCreater.HandleFunc("/user/create/{name}/{mailAddress}/{passWord}", userCreate).Methods("POST").Queries("name", "mailAddress", "passWord",
+		"{name}", "{mailAddress}", "{passWord}")
 	//ユーザーサインイン
 	routeCreater.HandleFunc("/user/signIn", userSignIn).Methods("GET")
 	//ユーザー情報取得
@@ -74,10 +70,8 @@ func main() {
 func userCreate(w http.ResponseWriter, r *http.Request) {
 	//パスパラメーターから新規ユーザー名を取得
 	value := mux.Vars(r)
-	//新規ユーザー
-	newUser := User{}
 
-	err := json.NewDecoder(r.Body).Decode(&newUser)
+	err := json.NewDecoder(r.Body).Decode(&userhandler.User{})
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		w.WriteHeader(http.StatusBadRequest)
@@ -87,35 +81,32 @@ func userCreate(w http.ResponseWriter, r *http.Request) {
 	dbHandler, _ := DBMap.Begin()
 
 	w.WriteHeader(http.StatusOK)
-
-	//ユーザー名
-	newUser.name = value["name"]
+	name := value["name"]
+	mailAddress := value["mailAddress"]
+	passWord := value["passWord"]
 
 	//IDはUUIDで生成
 	UUID, _ := uuid.NewUUID()
-	newUser.id = UUID.String()
+	id := UUID.String()
 
 	//ここから認証トークン生成部
 	//認証トークンの生成方法は以下のサイトを参考にしている
 	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
 	//ユーザーIDから秘密鍵生成用のシードを生成
-	b, _ := hex.DecodeString(newUser.id)
+	b, _ := hex.DecodeString(id)
 	privateKey := ed25519.PrivateKey(b)
 
-	//リフレッシュのことを考えて秘密鍵をDBに保存
-	newUser.privateKey = privateKey
-
 	//DBに追加＋反映
-	dbHandler.Insert(newUser)
+	dbHandler.Insert(userhandler.NewUser(id, name, mailAddress, passWord, privateKey))
 	dbHandler.Commit()
 	//全て終わればメッセージを出して終了
-	w.Write([]byte(fmt.Sprintf("User %s created", newUser.name)))
+	w.Write([]byte(fmt.Sprintf("User %s created", name)))
 
 }
 
 func userSignIn(w http.ResponseWriter, r *http.Request) {
 	//ユーザー
-	user := User{}
+	user := userhandler.User{}
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -135,12 +126,12 @@ func userSignIn(w http.ResponseWriter, r *http.Request) {
 		NotBefore:  now,        // 有効化日時
 	}
 
-	jsonToken.Set("ID", user.id)
+	jsonToken.Set("ID", user.GetID())
 
 	tokenCreator := paseto.NewV2()
 
 	//トークンを生成
-	token, err := tokenCreator.Sign(user.privateKey, jsonToken, footer)
+	token, err := tokenCreator.Sign(user.GetPrivateKey(), jsonToken, footer)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -222,8 +213,8 @@ func userGet_impl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loginUser, err := getOneUser(jsonToken)
-	w.Write([]byte(fmt.Sprintf(loginUser.id)))
-	w.Write([]byte(fmt.Sprintf(loginUser.name)))
+	w.Write([]byte(fmt.Sprintf(loginUser.GetID())))
+	w.Write([]byte(fmt.Sprintf(loginUser.GetName())))
 
 }
 
@@ -251,9 +242,9 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 //jsonTokenからユーザーを取得
-func getOneUser(jsonToken paseto.JSONToken) (User, error) {
+func getOneUser(jsonToken paseto.JSONToken) (userhandler.User, error) {
 	id := jsonToken.Get("ID")
-	loginUser := User{}
+	loginUser := userhandler.NewUser_Params(userhandler.User{})
 	err := DBMap.SelectOne(&loginUser, "SELECT * FROM user WHERE ID = ?", id)
 	if err != nil {
 		return loginUser, commonErrors.FailedToSearchError()
@@ -279,7 +270,7 @@ func userUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	//パスパラメーターから新規ユーザー名を取得
 	value := mux.Vars(r)
-	loginUser.name = value["name"]
+	loginUser.SetName(value["name"])
 	dbHandler, _ := DBMap.Begin()
 	_, err2 := dbHandler.Update(loginUser)
 	if err2 != nil {
