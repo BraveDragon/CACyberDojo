@@ -41,7 +41,7 @@ const expirationTime = 30 * time.Minute
 
 //User : ユーザー情報を管理
 type User struct {
-	id         string             `db:"ID, primarykey` //ユーザーID
+	id         string             `db:"id, primarykey` //ユーザーID
 	name       string             `db:"name"`          //ユーザー名
 	privateKey ed25519.PrivateKey `db:"privateKey"`    //認証トークンの秘密鍵
 
