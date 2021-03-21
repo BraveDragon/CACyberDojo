@@ -3,6 +3,8 @@ package DataBase
 import (
 	"database/sql"
 	"log"
+
+	"github.com/go-gorp/gorp"
 )
 
 var DB *sql.DB
@@ -16,4 +18,8 @@ func Init() *sql.DB {
 	}
 	return DB
 
+}
+
+func NewDBMap() *gorp.DbMap {
+	return &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 }
