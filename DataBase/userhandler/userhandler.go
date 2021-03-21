@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-gorp/gorp"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/o1egl/paseto"
@@ -70,7 +69,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DBMap := &gorp.DbMap{Db: DataBase.DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+	DBMap := DataBase.NewDBMap()
 	dbHandler, _ := DBMap.Begin()
 
 	w.WriteHeader(http.StatusOK)

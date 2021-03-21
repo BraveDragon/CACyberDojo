@@ -12,7 +12,6 @@ import (
 	"CACyberDojo/DataBase"
 	"CACyberDojo/DataBase/userhandler"
 
-	"github.com/go-gorp/gorp"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
@@ -22,7 +21,7 @@ var decoder = schema.NewDecoder()
 //DB に接続
 //DB : データベース本体
 var DB = DataBase.Init()
-var DBMap = &gorp.DbMap{Db: DataBase.DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+var DBMap = DataBase.NewDBMap()
 
 //User : ユーザー情報を管理
 
@@ -39,7 +38,7 @@ func main() {
 	routeCreater.HandleFunc("/user/create/{name}/{mailAddress}/{passWord}", userhandler.UserCreate).Methods("POST").Queries("name", "mailAddress", "passWord",
 		"{name}", "{mailAddress}", "{passWord}")
 	//ユーザーサインイン
-	routeCreater.HandleFunc("/user/signIn", userhandler.UserSignIn).Methods("GET")
+	routeCreater.HandleFunc("/user/signIn/{mailAddress}/{passWord}", userhandler.UserSignIn).Methods("GET").Queries("mailAddress", "{mailAddress}", "{passWord}")
 	//ユーザー情報取得
 	routeCreater.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
 	//トークンのリフレッシュ
