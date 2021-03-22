@@ -47,8 +47,8 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	DBMap := DataBase.NewDBMap()
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
 	dbHandler, _ := DBMap.Begin()
 
 	w.WriteHeader(http.StatusOK)
@@ -76,10 +76,9 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserSignIn(w http.ResponseWriter, r *http.Request) {
-	//ユーザー
-	user := User{}
+	var decoder interface{}
 
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := json.NewDecoder(r.Body).Decode(&decoder)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,7 +89,10 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	mailAddress := value["mailAddress"]
 	passWord := value["passWord"]
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	DBMap := DataBase.NewDBMap()
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
+	//ユーザー
+	user := User{}
 	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", mailAddress, passWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
@@ -216,7 +218,8 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 func getOneUser(jsonToken paseto.JSONToken) (User, error) {
 	id := jsonToken.Get("ID")
 	loginUser := User{}
-	DBMap := DataBase.NewDBMap()
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
 	err := DBMap.SelectOne(&loginUser, "SELECT * FROM user WHERE ID = ?", id)
 	if err != nil {
 		return loginUser, commonErrors.FailedToSearchError()
@@ -243,7 +246,8 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	//パスパラメーターから新規ユーザー名を取得
 	value := mux.Vars(r)
 	loginUser.Name = value["name"]
-	DBMap := DataBase.NewDBMap()
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
 	dbHandler, _ := DBMap.Begin()
 	_, err2 := dbHandler.Update(loginUser)
 	if err2 != nil {
