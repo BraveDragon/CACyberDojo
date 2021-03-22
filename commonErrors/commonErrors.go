@@ -17,3 +17,8 @@ func FailedToSearchError() error {
 	return errors.New("Failed to search")
 
 }
+
+func TrytoDrawZeroTimes() error {
+	return errors.New("You try to draw gacha 0 times.")
+
+}
