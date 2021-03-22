@@ -2,10 +2,17 @@ package gachahandler
 
 import (
 	"CACyberDojo/DataBase"
+	"CACyberDojo/DataBase/userhandler"
 	"CACyberDojo/commonErrors"
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
+
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type Characters struct {
@@ -29,7 +36,7 @@ type Gachas struct {
 }
 
 //idに合うガチャをdrawTimes回引く
-func DrawGacha(id int, drawTimes int) ([]Characters, error) {
+func drawGacha(id int, drawTimes int) ([]Characters, error) {
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
 	var gacha Gachas
@@ -62,4 +69,34 @@ func DrawGacha(id int, drawTimes int) ([]Characters, error) {
 
 	}
 	return results, nil
+}
+
+func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
+	value := mux.Vars(r)
+	gachaId, _ := strconv.Atoi(value["gachaId"])
+	drawTimes, _ := strconv.Atoi(value["drawTimes"])
+	results, err := drawGacha(gachaId, drawTimes)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("Permission error.")))
+		return
+	}
+	//ログインしているユーザーを取得
+	loginUser, err := userhandler.GetOneUser(jsonToken)
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
+	dbhandler, err := DBMap.Begin()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	for _, result := range results {
+		dbhandler.Insert(OwnCharacters{UserId: loginUser.Id, CharacterId: result.Id})
+	}
+	dbhandler.Commit()
+
 }

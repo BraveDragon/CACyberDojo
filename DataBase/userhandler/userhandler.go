@@ -185,7 +185,7 @@ func UserGet_impl(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("Permission error.")))
 		return
 	}
-	loginUser, err := getOneUser(jsonToken)
+	loginUser, err := GetOneUser(jsonToken)
 	w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	w.Write([]byte(fmt.Sprintf(loginUser.Name)))
 
@@ -215,7 +215,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 //jsonTokenからユーザーを取得
-func getOneUser(jsonToken paseto.JSONToken) (User, error) {
+func GetOneUser(jsonToken paseto.JSONToken) (User, error) {
 	id := jsonToken.Get("ID")
 	loginUser := User{}
 	DB := DataBase.Init()
@@ -237,7 +237,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//トークンから主キーのユーザーIDを取得
-	loginUser, err := getOneUser(jsonToken)
+	loginUser, err := GetOneUser(jsonToken)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

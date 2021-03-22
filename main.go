@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"CACyberDojo/DataBase/gachahandler"
 	"CACyberDojo/DataBase/userhandler"
 
 	"github.com/gorilla/mux"
@@ -37,6 +38,10 @@ func main() {
 	routeCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
 	//トークンのリフレッシュ
 	routeCreator.HandleFunc("/user/refresh", userhandler.Refresh).Methods("GET")
+
+	//ガチャを引く
+	routeCreator.HandleFunc("/gacha/draw/{gachaId}/{drawTimes}",
+		gachahandler.GachaDrawHandler).Methods("GET").Queries("drawTimes", "{drawTimes}", "gachaId", "{gachaId}")
 
 	//ユーザー情報更新
 	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT").Queries("name", "{name}")
