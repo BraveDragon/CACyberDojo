@@ -21,7 +21,7 @@ type User struct {
 	Name        string             `db:"unique" column:"name"`        //ユーザー名
 	MailAddress string             `db:"unique" column:"mailAddress"` //メールアドレス
 	PassWord    string             `db:"unique" column:"passWord"`    //パスワード
-	PrivateKey  ed25519.PrivateKey `db:"unique" column:"privateKey"`  //認証トークンの秘密鍵
+	PrivateKey  ed25519.PrivateKey `db:"" column:"privateKey"`        //認証トークンの秘密鍵
 
 }
 
