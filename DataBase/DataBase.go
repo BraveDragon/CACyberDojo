@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/go-gorp/gorp"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB

@@ -17,38 +17,17 @@ import (
 
 //User: 1ユーザー情報を管理
 type User struct {
-	id          string             `db:"primarykey" column:"id"`      //ユーザーID
-	name        string             `db:"unique" column:"name"`        //ユーザー名
-	mailAddress string             `db:"unique" column:"mailAddress"` //メールアドレス
-	passWord    string             `db:"unique" column:"passWord"`    //パスワード
-	privateKey  ed25519.PrivateKey `db:"unique" column:"privateKey"`  //認証トークンの秘密鍵
-
-}
-
-func NewUser_Params(params User) User {
-	return User{id: params.id, name: params.name, mailAddress: params.mailAddress, passWord: params.passWord, privateKey: params.privateKey}
+	Id          string             `db:"primarykey" column:"id"`      //ユーザーID
+	Name        string             `db:"unique" column:"name"`        //ユーザー名
+	MailAddress string             `db:"unique" column:"mailAddress"` //メールアドレス
+	PassWord    string             `db:"unique" column:"passWord"`    //パスワード
+	PrivateKey  ed25519.PrivateKey `db:"unique" column:"privateKey"`  //認証トークンの秘密鍵
 
 }
 
 func NewUser(id string, name string, mailAddress string, passWord string, privateKey ed25519.PrivateKey) User {
-	return User{id: id, name: name, mailAddress: mailAddress, passWord: passWord, privateKey: privateKey}
+	return User{Id: id, Name: name, MailAddress: mailAddress, PassWord: passWord, PrivateKey: privateKey}
 
-}
-
-func (instance User) GetID() string {
-	return instance.id
-}
-
-func (instance User) GetName() string {
-	return instance.name
-}
-
-func (instance User) GetPrivateKey() ed25519.PrivateKey {
-	return instance.privateKey
-}
-
-func (instance User) SetName(newName string) {
-	instance.name = newName
 }
 
 //トークン生成用の定数類
@@ -106,6 +85,18 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	//パスパラメーターからパスワードとメールアドレスを取得
+	value := mux.Vars(r)
+	mailAddress := value["mailAddress"]
+	passWord := value["passWord"]
+	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
+	DBMap := DataBase.NewDBMap()
+	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", mailAddress, passWord)
+	if err != nil {
+		//メールアドレスとパスワードの組がDBになければエラーを返す
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	now := time.Now()
 	expiration := time.Now().Add(expirationTime)
 	jsonToken := paseto.JSONToken{
@@ -118,12 +109,12 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 		NotBefore:  now,        // 有効化日時
 	}
 
-	jsonToken.Set("ID", user.GetID())
+	jsonToken.Set("ID", user.Id)
 
 	tokenCreator := paseto.NewV2()
 
 	//トークンを生成
-	token, err := tokenCreator.Sign(user.GetPrivateKey(), jsonToken, footer)
+	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -193,8 +184,8 @@ func UserGet_impl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loginUser, err := getOneUser(jsonToken)
-	w.Write([]byte(fmt.Sprintf(loginUser.GetID())))
-	w.Write([]byte(fmt.Sprintf(loginUser.GetName())))
+	w.Write([]byte(fmt.Sprintf(loginUser.Id)))
+	w.Write([]byte(fmt.Sprintf(loginUser.Name)))
 
 }
 
@@ -224,7 +215,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 //jsonTokenからユーザーを取得
 func getOneUser(jsonToken paseto.JSONToken) (User, error) {
 	id := jsonToken.Get("ID")
-	loginUser := NewUser_Params(User{})
+	loginUser := User{}
 	DBMap := DataBase.NewDBMap()
 	err := DBMap.SelectOne(&loginUser, "SELECT * FROM user WHERE ID = ?", id)
 	if err != nil {
@@ -251,7 +242,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	//パスパラメーターから新規ユーザー名を取得
 	value := mux.Vars(r)
-	loginUser.SetName(value["name"])
+	loginUser.Name = value["name"]
 	DBMap := DataBase.NewDBMap()
 	dbHandler, _ := DBMap.Begin()
 	_, err2 := dbHandler.Update(loginUser)
