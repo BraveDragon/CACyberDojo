@@ -15,12 +15,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Characters struct {
+type Character struct {
 	Id   int    `db:"primarykey" column:"id"`
 	Name string `db:"unique" column:"name"`
 }
 
-type OwnCharacters struct {
+type OwnCharacter struct {
 	UserId      string `db:"" column:"userId"`
 	CharacterId int    `db:"" column:"characterId"`
 }
@@ -30,27 +30,27 @@ type Content struct {
 	DropRate    float64 `json:"dropRate"`
 }
 
-type Gachas struct {
+type Gacha struct {
 	Id      int    `db:"primarykey" column:"id"`
 	Content string `db:"" column:"content"`
 }
 
 //idに合うガチャをdrawTimes回引く
-func drawGacha(id int, drawTimes int) ([]Characters, error) {
+func drawGacha(id int, drawTimes int) ([]Character, error) {
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
-	var gacha Gachas
+	var gacha Gacha
 	DBMap.SelectOne(&gacha, "SELECT content FROM gachas WHERE id=?", id)
 	if drawTimes == 0 {
-		return []Characters{}, commonErrors.TrytoDrawZeroTimes()
+		return []Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
 	byteContent := []byte(gacha.Content)
 	contents := []Content{}
 	err := json.Unmarshal(byteContent, &contents)
 	if err != nil {
-		return []Characters{}, err
+		return []Character{}, err
 	}
-	results := []Characters{}
+	results := []Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
 		rand.Seed(time.Now().UnixNano())
 		//0以上1未満の乱数を生成(結果となる)
@@ -60,7 +60,7 @@ func drawGacha(id int, drawTimes int) ([]Characters, error) {
 			//lotteryからcontent.DropRateの値を引いていき、lotteryが0以下になった時のcontentを結果とする
 			lottery -= content.DropRate
 			if lottery <= 0 {
-				result := Characters{}
+				result := Character{}
 				DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", content.CharacterId)
 				results = append(results, result)
 			}
@@ -71,6 +71,7 @@ func drawGacha(id int, drawTimes int) ([]Characters, error) {
 	return results, nil
 }
 
+//ガチャ処理のハンドラ
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	value := mux.Vars(r)
 	gachaId, _ := strconv.Atoi(value["gachaId"])
@@ -80,6 +81,7 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	//ユーザーを取得するためにjsonTokenを取得
 	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("Permission error.")))
@@ -87,6 +89,11 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//ログインしているユーザーを取得
 	loginUser, err := userhandler.GetOneUser(jsonToken)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	//結果をDBに格納するためにDB,DBMapを取得
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
 	dbhandler, err := DBMap.Begin()
@@ -95,8 +102,40 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, result := range results {
-		dbhandler.Insert(OwnCharacters{UserId: loginUser.Id, CharacterId: result.Id})
+		dbhandler.Insert(OwnCharacter{UserId: loginUser.Id, CharacterId: result.Id})
 	}
 	dbhandler.Commit()
+
+}
+
+//所持キャラクター一覧表示のハンドラ
+func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
+	//ユーザーを取得するためにjsonTokenを取得
+	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("Permission error.")))
+		return
+	}
+	//ログインしているユーザーを取得
+	loginUser, err := userhandler.GetOneUser(jsonToken)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	//DBに接続して所持キャラクター一覧を取得
+	DB := DataBase.Init()
+	DBMap := DataBase.NewDBMap(DB)
+	OwnCharacters := []OwnCharacter{}
+	DBMap.Select(&OwnCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", loginUser.Id)
+	Characters := []Character{}
+	for _, ownCaracter := range OwnCharacters {
+		Characters_tmp := []Character{}
+		DBMap.Select(&Characters_tmp, "SELECT * FROM characters WHERE id=?", ownCaracter.CharacterId)
+		Characters = append(Characters, Characters_tmp...)
+	}
+
+	for _, character := range Characters {
+		w.Write([]byte(fmt.Sprintf(character.Name)))
+	}
 
 }

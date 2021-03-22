@@ -43,6 +43,9 @@ func main() {
 	routeCreator.HandleFunc("/gacha/draw/{gachaId}/{drawTimes}",
 		gachahandler.GachaDrawHandler).Methods("GET").Queries("drawTimes", "{drawTimes}", "gachaId", "{gachaId}")
 
+	//所持キャラクターの一覧を表示
+	routeCreator.HandleFunc("/character/list", gachahandler.ShowOwnCharacters).Methods("GET")
+
 	//ユーザー情報更新
 	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT").Queries("name", "{name}")
 	log.Fatal(http.ListenAndServe(":8080", routeCreator))
