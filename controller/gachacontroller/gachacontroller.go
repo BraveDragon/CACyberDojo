@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/go-gorp/gorp"
 )
 
 type Gacha struct {
@@ -22,16 +24,10 @@ type GachaRequest struct {
 	DrawTimes int `json:"drawTimes"`
 }
 
-//idに合うガチャをdrawTimes回引く
-func drawGacha(id int, drawTimes int) ([]charactercontroller.Character, error) {
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
-	var gachaContents []Gacha
-	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
-	if drawTimes == 0 {
-		return []charactercontroller.Character{}, commonErrors.TrytoDrawZeroTimes()
-	}
+type Drawer func(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []charactercontroller.Character
 
+//確変も何も行わない普通のガチャ。drawGachaのデフォルト。
+func DefaultDrawer(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []charactercontroller.Character {
 	results := []charactercontroller.Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
 		rand.Seed(time.Now().UnixNano())
@@ -50,6 +46,28 @@ func drawGacha(id int, drawTimes int) ([]charactercontroller.Character, error) {
 		}
 
 	}
+	return results
+}
+
+//idに合うガチャをdrawTimes回引く
+func drawGacha(id int, drawTimes int, drawer ...Drawer) ([]charactercontroller.Character, error) {
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
+	var gachaContents []Gacha
+	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
+	if drawTimes == 0 {
+		return []charactercontroller.Character{}, commonErrors.TrytoDrawZeroTimes()
+	}
+	//ガチャのロジック指定がない時はデフォルトのガチャを使う
+	if len(drawer) == 0 {
+		drawer = append(drawer, DefaultDrawer)
+	}
+	//ガチャのロジック指定が2つ以上の時はエラーを返す
+	if len(drawer) > 1 {
+		return []charactercontroller.Character{}, commonErrors.InvalidSettingOfDrawerError()
+	}
+	results := drawer[0](DBMap, drawTimes, gachaContents)
+
 	return results, nil
 }
 

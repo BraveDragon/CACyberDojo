@@ -46,14 +46,14 @@ func main() {
 	//ユーザー情報取得
 	AuthorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
 
+	//ユーザー情報更新
+	AuthorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
+
 	//ガチャを引く
 	AuthorizationRouteCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
 
 	//所持キャラクターの一覧を表示
 	AuthorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
-
-	//ユーザー情報更新
-	AuthorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
 
 	log.Fatal(http.ListenAndServe(":8080", AuthorizationRouteCreator))
 	log.Fatal(http.ListenAndServe(":8080", OtherRouteCreator))

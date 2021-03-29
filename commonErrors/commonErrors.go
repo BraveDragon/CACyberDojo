@@ -17,6 +17,11 @@ func IncorrectTokenError() error {
 
 }
 
+func InvalidSettingOfDrawerError() error {
+	return errors.New("You can set only one drawer")
+
+}
+
 func FailedToAuthorizationError() error {
 	return errors.New("Failed to authorize")
 }
