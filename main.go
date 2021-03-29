@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/characterhandler"
 	"CACyberDojo/handler/gachahandler"
 	"CACyberDojo/handler/userhandler"
@@ -20,31 +21,41 @@ import (
 var decoder = schema.NewDecoder()
 
 func main() {
-	routeCreator := mux.NewRouter()
+	//ユーザー認証をする処理用のルーター
+	AuthorizationRouteCreator := mux.NewRouter()
+	//ユーザー認証をしない処理用のルーター
+	OtherRouteCreator := mux.NewRouter()
+	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
+	AuthorizationRouteCreator.Use(usercontroller.AuthorizationMiddleware)
+	AuthorizationRouteCreator.Use(usercontroller.RefreshMiddleware)
 
-	routeCreator.Host("https://localhost:8080")
-	routeCreator.PathPrefix("https")
-	routeCreator.Methods("GET", "POST", "PUT")
-	routeCreator.Headers("X-Requested-With", "XMLHttpRequest")
+	AuthorizationRouteCreator.Host("https://localhost:8080")
+	AuthorizationRouteCreator.PathPrefix("https")
+	AuthorizationRouteCreator.Methods("GET", "POST", "PUT")
+	AuthorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
+
+	OtherRouteCreator.Host("https://localhost:8080")
+	OtherRouteCreator.PathPrefix("https")
+	OtherRouteCreator.Methods("GET", "POST", "PUT")
+	OtherRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 
 	//エンドポイントを用意
 	//ユーザー作成
-	routeCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
-	//ユーザーサインイン
-	routeCreator.HandleFunc("/user/signIn", userhandler.UserSignIn).Methods("GET")
+	OtherRouteCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
+
 	//ユーザー情報取得
-	routeCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
-	//トークンのリフレッシュ
-	routeCreator.HandleFunc("/user/refresh", userhandler.Refresh).Methods("GET")
+	AuthorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
 
 	//ガチャを引く
-	routeCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
+	AuthorizationRouteCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
 
 	//所持キャラクターの一覧を表示
-	routeCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
+	AuthorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
 
 	//ユーザー情報更新
-	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
-	log.Fatal(http.ListenAndServe(":8080", routeCreator))
+	AuthorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
+
+	log.Fatal(http.ListenAndServe(":8080", AuthorizationRouteCreator))
+	log.Fatal(http.ListenAndServe(":8080", OtherRouteCreator))
 
 }

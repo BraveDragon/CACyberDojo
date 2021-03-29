@@ -34,8 +34,7 @@ ENGINE=InnoDB;
 CREATE TABLE `gachas` (
 	`gachaId` INT(10) UNSIGNED NOT NULL,
 	`characterId` INT(10) UNSIGNED NOT NULL,
-	`dropRate` FLOAT NOT NULL,
-	UNIQUE INDEX `characterId` (`characterId`) USING BTREE
+	`dropRate` FLOAT NOT NULL
 )
 COMMENT='ガチャを管理。同一のgachaIdを持つ項目のdropRateの合計が1になっているかどうか確認すること。'
 COLLATE='utf8mb4_0900_ai_ci'

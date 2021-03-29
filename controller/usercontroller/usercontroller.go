@@ -62,13 +62,12 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 
 }
 
-func UserSignIn_Impl(r *http.Request) (string, time.Time, error) {
+func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	jsonUser := User{}
-	//jsonボディからメールアドレスとパスワードを取得
+	//JSONボディから必要なデータを取得
 	err := json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
-		return "", time.Time{}, commonErrors.IncorrectJsonBodyError()
+		w.WriteHeader(http.StatusBadRequest)
 	}
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
 	DB := model.Init()
@@ -78,7 +77,7 @@ func UserSignIn_Impl(r *http.Request) (string, time.Time, error) {
 	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
-		return "", time.Time{}, commonErrors.FailedToAuthorizationError()
+		w.WriteHeader(http.StatusBadRequest)
 	}
 	now := time.Now()
 	expiration := time.Now().Add(expirationTime)
@@ -100,11 +99,22 @@ func UserSignIn_Impl(r *http.Request) (string, time.Time, error) {
 	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
 
 	if err != nil {
-		return "", time.Time{}, commonErrors.FailedToCreateTokenError()
+		w.WriteHeader(http.StatusBadRequest)
 	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: expiration,
+	})
 
-	return token, expiration, nil
+}
 
+func AuthorizationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			UserSignIn(w, r)
+			next.ServeHTTP(w, r)
+		})
 }
 
 //jsonTokenからユーザーを取得
@@ -175,5 +185,31 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 	//修正したらDBに反映
 	dbHandler.Commit()
 	return nil
+
+}
+
+func RefreshMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			// トークンの検証(有効かどうか)
+			_, jsonToken, _, err := CheckPasetoAuth(w, r)
+			if err != nil {
+				//トークンが無効ならエラーを返す
+				w.WriteHeader(http.StatusUnauthorized)
+
+			}
+			now := time.Now()
+			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
+			if jsonToken.Expiration.After(now) == true {
+				w.WriteHeader(http.StatusOK)
+
+			} else {
+				//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
+				UserSignIn(w, r)
+				w.WriteHeader(http.StatusOK)
+
+			}
+			next.ServeHTTP(w, r)
+		})
 
 }

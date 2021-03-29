@@ -3,7 +3,6 @@ package userhandler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"CACyberDojo/controller/usercontroller"
 )
@@ -17,20 +16,6 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	//全て終わればメッセージを出して終了
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf("User %s created", name)))
-
-}
-
-func UserSignIn(w http.ResponseWriter, r *http.Request) {
-	token, expiration, err := usercontroller.UserSignIn_Impl(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: expiration,
-	})
 
 }
 
@@ -71,29 +56,6 @@ func UserGet_impl(w http.ResponseWriter, r *http.Request) {
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	w.Write([]byte(fmt.Sprintf(loginUser.Name)))
-
-}
-
-func Refresh(w http.ResponseWriter, r *http.Request) {
-	// トークンの検証(有効かどうか)
-	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
-	if err != nil {
-		//トークンが無効ならエラーを返す
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	now := time.Now()
-	//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
-	if jsonToken.Expiration.After(now) == true {
-		w.WriteHeader(http.StatusOK)
-		return
-
-	} else {
-		//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
-		UserSignIn(w, r)
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 
 }
 

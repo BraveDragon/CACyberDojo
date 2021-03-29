@@ -12,8 +12,8 @@ import (
 )
 
 type Gacha struct {
-	GachaId     int     `db:"primarykey" column:"gachaId"`
-	CharacterId int     `db:"unique" column:"characterId"`
+	GachaId     int     `db:"" column:"gachaId"`
+	CharacterId int     `db:"" column:"characterId"`
 	DropRate    float64 `db:"" column:"dropRate"`
 }
 
