@@ -11,17 +11,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/o1egl/paseto"
 )
 
 //User: 1ユーザー情報を管理
 type User struct {
-	Id          string             `db:"primarykey" column:"id"`      //ユーザーID
-	Name        string             `db:"unique" column:"name"`        //ユーザー名
-	MailAddress string             `db:"unique" column:"mailAddress"` //メールアドレス
-	PassWord    string             `db:"unique" column:"passWord"`    //パスワード
-	PrivateKey  ed25519.PrivateKey `db:"" column:"privateKey"`        //認証トークンの秘密鍵
+	Id          string             `db:"primarykey" column:"id"`                         //ユーザーID
+	Name        string             `db:"unique" column:"name" json:"name"`               //ユーザー名
+	MailAddress string             `db:"unique" column:"mailAddress" json:"mailAddress"` //メールアドレス
+	PassWord    string             `db:"unique" column:"passWord" json:"passWord"`       //パスワード
+	PrivateKey  ed25519.PrivateKey `db:"" column:"privateKey"`                           //認証トークンの秘密鍵
 
 }
 
@@ -38,10 +37,9 @@ const footer = "FOOTER"
 const expirationTime = 30 * time.Minute
 
 func UserCreate(w http.ResponseWriter, r *http.Request) {
-	//パスパラメーターから新規ユーザー名を取得
-	value := mux.Vars(r)
-
-	err := json.NewDecoder(r.Body).Decode(&User{})
+	jsonUser := User{}
+	//JSONボディから必要なデータを取得
+	err := json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		w.WriteHeader(http.StatusBadRequest)
@@ -52,13 +50,10 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	dbHandler, _ := DBMap.Begin()
 
 	w.WriteHeader(http.StatusOK)
-	name := value["name"]
-	mailAddress := value["mailAddress"]
-	passWord := value["passWord"]
-
 	//IDはUUIDで生成
 	UUID, _ := uuid.NewUUID()
 	id := UUID.String()
+	jsonUser.Id = id
 
 	//ここから認証トークン生成部
 	//認証トークンの生成方法は以下のサイトを参考にしている
@@ -66,34 +61,30 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	//ユーザーIDから秘密鍵生成用のシードを生成
 	b, _ := hex.DecodeString(id)
 	privateKey := ed25519.PrivateKey(b)
-
+	jsonUser.PrivateKey = privateKey
 	//DBに追加＋反映
-	dbHandler.Insert(NewUser(id, name, mailAddress, passWord, privateKey))
+	dbHandler.Insert()
 	dbHandler.Commit()
 	//全て終わればメッセージを出して終了
-	w.Write([]byte(fmt.Sprintf("User %s created", name)))
+	w.Write([]byte(fmt.Sprintf("User %s created", jsonUser.Name)))
 
 }
 
 func UserSignIn(w http.ResponseWriter, r *http.Request) {
-	var decoder interface{}
-
-	err := json.NewDecoder(r.Body).Decode(&decoder)
+	jsonUser := User{}
+	//jsonボディからメールアドレスとパスワードを取得
+	err := json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//パスパラメーターからパスワードとメールアドレスを取得
-	value := mux.Vars(r)
-	mailAddress := value["mailAddress"]
-	passWord := value["passWord"]
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
 	//ユーザー
 	user := User{}
-	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", mailAddress, passWord)
+	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		w.WriteHeader(http.StatusForbidden)
@@ -243,9 +234,15 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	//パスパラメーターから新規ユーザー名を取得
-	value := mux.Vars(r)
-	loginUser.Name = value["name"]
+	jsonUser := User{}
+	//jsonボディからメールアドレスとパスワードを取得
+	err = json.NewDecoder(r.Body).Decode(&jsonUser)
+	if err != nil {
+		//bodyの構造がおかしい時はエラーを返す
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	loginUser.Name = jsonUser.Name
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
 	dbHandler, _ := DBMap.Begin()

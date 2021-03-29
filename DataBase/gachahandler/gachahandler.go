@@ -9,10 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
-
-	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 type Character struct {
@@ -25,43 +21,39 @@ type OwnCharacter struct {
 	CharacterId int    `db:"" column:"characterId"`
 }
 
-type Content struct {
-	CharacterId int     `json:"id"`
-	DropRate    float64 `json:"dropRate"`
+type Gacha struct {
+	GachaId     int     `db:"primarykey" column:"gachaId"`
+	CharacterId int     `db:"unique" column:"characterId"`
+	DropRate    float64 `db:"" column:"dropRate"`
 }
 
-type Gacha struct {
-	Id      int    `db:"primarykey" column:"id"`
-	Content string `db:"" column:"content"`
+type GachaRequest struct {
+	GachaId   int `json:"gachaId"`
+	DrawTimes int `json:"drawTimes"`
 }
 
 //idに合うガチャをdrawTimes回引く
 func drawGacha(id int, drawTimes int) ([]Character, error) {
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
-	var gacha Gacha
-	DBMap.SelectOne(&gacha, "SELECT content FROM gachas WHERE id=?", id)
+	var gachaContents []Gacha
+	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
 	if drawTimes == 0 {
 		return []Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
-	byteContent := []byte(gacha.Content)
-	contents := []Content{}
-	err := json.Unmarshal(byteContent, &contents)
-	if err != nil {
-		return []Character{}, err
-	}
+
 	results := []Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
 		rand.Seed(time.Now().UnixNano())
 		//0以上1未満の乱数を生成(結果となる)
 		lottery := rand.Float64()
 
-		for _, content := range contents {
+		for _, gachaContent := range gachaContents {
 			//lotteryからcontent.DropRateの値を引いていき、lotteryが0以下になった時のcontentを結果とする
-			lottery -= content.DropRate
+			lottery -= gachaContent.DropRate
 			if lottery <= 0 {
 				result := Character{}
-				DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", content.CharacterId)
+				DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", gachaContent.CharacterId)
 				results = append(results, result)
 			}
 
@@ -73,10 +65,14 @@ func drawGacha(id int, drawTimes int) ([]Character, error) {
 
 //ガチャ処理のハンドラ
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
-	value := mux.Vars(r)
-	gachaId, _ := strconv.Atoi(value["gachaId"])
-	drawTimes, _ := strconv.Atoi(value["drawTimes"])
-	results, err := drawGacha(gachaId, drawTimes)
+	gachaRequest := GachaRequest{}
+	err := json.NewDecoder(r.Body).Decode(&gachaRequest)
+	if err != nil {
+		//bodyの構造がおかしい時はエラーを返す
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	results, err := drawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

@@ -14,7 +14,7 @@ COLLATE='utf8mb4_0900_ai_ci'
 ENGINE=InnoDB;
 
 CREATE TABLE `characters` (
-	`id` INT(10) NOT NULL,
+	`id` INT(10) UNSIGNED NOT NULL,
 	`name` CHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_0900_ai_ci',
 	PRIMARY KEY (`id`) USING BTREE,
 	UNIQUE INDEX `name` (`name`) USING BTREE
@@ -32,10 +32,11 @@ COLLATE='utf8mb4_0900_ai_ci'
 ENGINE=InnoDB;
 
 CREATE TABLE `gachas` (
-	`id` INT(10) NOT NULL,
-	`content` JSON NOT NULL,
-	PRIMARY KEY (`id`) USING BTREE
+	`gachaId` INT(10) UNSIGNED NOT NULL,
+	`characterId` INT(10) UNSIGNED NOT NULL,
+	`dropRate` FLOAT NOT NULL,
+	UNIQUE INDEX `characterId` (`characterId`) USING BTREE
 )
-COMMENT='ガチャを管理。内容はjson形式で保存。(キャラクターID、出現確率)'
+COMMENT='ガチャを管理。同一のgachaIdを持つ項目のdropRateの合計が1になっているかどうか確認すること。'
 COLLATE='utf8mb4_0900_ai_ci'
 ENGINE=InnoDB;

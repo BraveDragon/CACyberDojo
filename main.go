@@ -28,26 +28,22 @@ func main() {
 
 	//エンドポイントを用意
 	//ユーザー作成
-	routeCreator.HandleFunc("/user/create/{name}/{mailAddress}/{passWord}",
-		userhandler.UserCreate).Methods("POST").Queries("name", "mailAddress", "passWord",
-		"{name}", "{mailAddress}", "{passWord}")
+	routeCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
 	//ユーザーサインイン
-	routeCreator.HandleFunc("/user/signIn/{mailAddress}/{passWord}",
-		userhandler.UserSignIn).Methods("GET").Queries("mailAddress", "passWord", "{mailAddress}", "{passWord}")
+	routeCreator.HandleFunc("/user/signIn", userhandler.UserSignIn).Methods("GET")
 	//ユーザー情報取得
 	routeCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
 	//トークンのリフレッシュ
 	routeCreator.HandleFunc("/user/refresh", userhandler.Refresh).Methods("GET")
 
 	//ガチャを引く
-	routeCreator.HandleFunc("/gacha/draw/{gachaId}/{drawTimes}",
-		gachahandler.GachaDrawHandler).Methods("GET").Queries("drawTimes", "{drawTimes}", "gachaId", "{gachaId}")
+	routeCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
 
 	//所持キャラクターの一覧を表示
 	routeCreator.HandleFunc("/character/list", gachahandler.ShowOwnCharacters).Methods("GET")
 
 	//ユーザー情報更新
-	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT").Queries("name", "{name}")
+	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8080", routeCreator))
 
 }
