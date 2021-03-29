@@ -31,6 +31,11 @@ func FailedToSearchError() error {
 
 }
 
+func FailedToGetUserError() error {
+	return errors.New("Failed to Get a user")
+
+}
+
 func TrytoDrawZeroTimes() error {
 	return errors.New("You try to draw gacha 0 times.")
 

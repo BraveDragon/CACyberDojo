@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"CACyberDojo/handler/characterhandler"
 	"CACyberDojo/handler/gachahandler"
 	"CACyberDojo/handler/userhandler"
 
@@ -40,7 +41,7 @@ func main() {
 	routeCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
 
 	//所持キャラクターの一覧を表示
-	routeCreator.HandleFunc("/character/list", gachahandler.ShowOwnCharacters).Methods("GET")
+	routeCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
 
 	//ユーザー情報更新
 	routeCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
