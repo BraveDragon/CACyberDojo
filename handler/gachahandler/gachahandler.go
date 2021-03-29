@@ -2,19 +2,15 @@ package gachahandler
 
 import (
 	"CACyberDojo/DataBase"
-	"CACyberDojo/DataBase/userhandler"
 	"CACyberDojo/commonErrors"
+	"CACyberDojo/handler/characterhandler"
+	"CACyberDojo/handler/userhandler"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
 )
-
-type Character struct {
-	Id   int    `db:"primarykey" column:"id"`
-	Name string `db:"unique" column:"name"`
-}
 
 type OwnCharacter struct {
 	UserId      string `db:"" column:"userId"`
@@ -33,16 +29,16 @@ type GachaRequest struct {
 }
 
 //idに合うガチャをdrawTimes回引く
-func drawGacha(id int, drawTimes int) ([]Character, error) {
+func drawGacha(id int, drawTimes int) ([]characterhandler.Character, error) {
 	DB := DataBase.Init()
 	DBMap := DataBase.NewDBMap(DB)
 	var gachaContents []Gacha
 	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
 	if drawTimes == 0 {
-		return []Character{}, commonErrors.TrytoDrawZeroTimes()
+		return []characterhandler.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
 
-	results := []Character{}
+	results := []characterhandler.Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
 		rand.Seed(time.Now().UnixNano())
 		//0以上1未満の乱数を生成(結果となる)
@@ -52,7 +48,7 @@ func drawGacha(id int, drawTimes int) ([]Character, error) {
 			//lotteryからcontent.DropRateの値を引いていき、lotteryが0以下になった時のcontentを結果とする
 			lottery -= gachaContent.DropRate
 			if lottery <= 0 {
-				result := Character{}
+				result := characterhandler.Character{}
 				DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", gachaContent.CharacterId)
 				results = append(results, result)
 			}
@@ -123,9 +119,9 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	DBMap := DataBase.NewDBMap(DB)
 	OwnCharacters := []OwnCharacter{}
 	DBMap.Select(&OwnCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", loginUser.Id)
-	Characters := []Character{}
+	Characters := []characterhandler.Character{}
 	for _, ownCaracter := range OwnCharacters {
-		Characters_tmp := []Character{}
+		Characters_tmp := []characterhandler.Character{}
 		DBMap.Select(&Characters_tmp, "SELECT * FROM characters WHERE id=?", ownCaracter.CharacterId)
 		Characters = append(Characters, Characters_tmp...)
 	}

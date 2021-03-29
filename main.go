@@ -9,8 +9,8 @@ import (
 	"log"
 	"net/http"
 
-	"CACyberDojo/DataBase/gachahandler"
-	"CACyberDojo/DataBase/userhandler"
+	"CACyberDojo/handler/gachahandler"
+	"CACyberDojo/handler/userhandler"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"

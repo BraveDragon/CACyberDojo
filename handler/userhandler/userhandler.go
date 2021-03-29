@@ -24,11 +24,6 @@ type User struct {
 
 }
 
-func NewUser(id string, name string, mailAddress string, passWord string, privateKey ed25519.PrivateKey) User {
-	return User{Id: id, Name: name, MailAddress: mailAddress, PassWord: passWord, PrivateKey: privateKey}
-
-}
-
 //トークン生成用の定数類
 //フッター
 const footer = "FOOTER"
