@@ -3,8 +3,8 @@ package gachahandler
 import (
 	"CACyberDojo/DataBase"
 	"CACyberDojo/commonErrors"
+	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/characterhandler"
-	"CACyberDojo/handler/userhandler"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -74,13 +74,13 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("Permission error.")))
 		return
 	}
 	//ログインしているユーザーを取得
-	loginUser, err := userhandler.GetOneUser(jsonToken)
+	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -103,13 +103,13 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 //所持キャラクター一覧表示のハンドラ
 func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("Permission error.")))
 		return
 	}
 	//ログインしているユーザーを取得
-	loginUser, err := userhandler.GetOneUser(jsonToken)
+	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

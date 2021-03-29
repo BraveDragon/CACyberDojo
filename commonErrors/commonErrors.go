@@ -8,8 +8,21 @@ func NoAuthorizationheaderError() error {
 
 }
 
+func IncorrectJsonBodyError() error {
+	return errors.New("The json body is incorrect!")
+
+}
 func IncorrectTokenError() error {
 	return errors.New("The token is incorrect!")
+
+}
+
+func FailedToAuthorizationError() error {
+	return errors.New("Failed to authorize")
+}
+
+func FailedToCreateTokenError() error {
+	return errors.New("Failed to create token")
 
 }
 
