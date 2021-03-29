@@ -10,6 +10,7 @@ import (
 //所持キャラクター一覧表示のハンドラ
 func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	Characters, err := charactercontroller.ShowOwnCharacters_Impl(w, r)
+
 	if err.Error() != commonErrors.FailedToAuthorizationError().Error() {
 		w.Write([]byte(fmt.Sprintf("Permission error.")))
 		return
