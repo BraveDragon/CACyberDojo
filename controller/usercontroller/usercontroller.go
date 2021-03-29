@@ -1,7 +1,7 @@
 package usercontroller
 
 import (
-	"CACyberDojo/DataBase"
+	"CACyberDojo/model"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
@@ -38,8 +38,8 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 	if err != nil {
 		return "", commonErrors.IncorrectJsonBodyError()
 	}
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	dbHandler, _ := DBMap.Begin()
 
 	//IDはUUIDで生成
@@ -71,8 +71,8 @@ func UserSignIn_Impl(r *http.Request) (string, time.Time, error) {
 		return "", time.Time{}, commonErrors.IncorrectJsonBodyError()
 	}
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	//ユーザー
 	user := User{}
 	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", jsonUser.MailAddress, jsonUser.PassWord)
@@ -111,8 +111,8 @@ func UserSignIn_Impl(r *http.Request) (string, time.Time, error) {
 func GetOneUser(jsonToken paseto.JSONToken) (User, error) {
 	id := jsonToken.Get("ID")
 	loginUser := User{}
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	err := DBMap.SelectOne(&loginUser, "SELECT * FROM user WHERE ID = ?", id)
 	if err != nil {
 		return loginUser, commonErrors.FailedToSearchError()
@@ -164,8 +164,8 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 		return commonErrors.IncorrectJsonBodyError()
 	}
 	loginUser.Name = jsonUser.Name
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	dbHandler, _ := DBMap.Begin()
 	_, err2 := dbHandler.Update(loginUser)
 	if err2 != nil {

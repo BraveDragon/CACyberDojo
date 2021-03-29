@@ -1,9 +1,9 @@
 package charactercontroller
 
 import (
-	"CACyberDojo/DataBase"
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/model"
 	"net/http"
 )
 
@@ -29,8 +29,8 @@ func ShowOwnCharacters_Impl(w http.ResponseWriter, r *http.Request) ([]Character
 		return []Character{}, commonErrors.FailedToGetUserError()
 	}
 	//DBに接続して所持キャラクター一覧を取得
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	OwnCharacters := []OwnCharacter{}
 	DBMap.Select(&OwnCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", loginUser.Id)
 	Characters := []Character{}

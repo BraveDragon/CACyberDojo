@@ -1,10 +1,10 @@
 package gachacontroller
 
 import (
-	"CACyberDojo/DataBase"
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/model"
 	"encoding/json"
 	"math/rand"
 	"net/http"
@@ -24,8 +24,8 @@ type GachaRequest struct {
 
 //idに合うガチャをdrawTimes回引く
 func drawGacha(id int, drawTimes int) ([]charactercontroller.Character, error) {
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	var gachaContents []Gacha
 	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
 	if drawTimes == 0 {
@@ -75,8 +75,8 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	//結果をDBに格納するためにDB,DBMapを取得
-	DB := DataBase.Init()
-	DBMap := DataBase.NewDBMap(DB)
+	DB := model.Init()
+	DBMap := model.NewDBMap(DB)
 	dbhandler, err := DBMap.Begin()
 	if err != nil {
 		return err
