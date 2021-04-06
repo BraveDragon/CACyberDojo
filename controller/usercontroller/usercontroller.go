@@ -2,6 +2,7 @@ package usercontroller
 
 import (
 	"CACyberDojo/model"
+	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
@@ -14,16 +15,6 @@ import (
 	"github.com/o1egl/paseto"
 )
 
-//User: ユーザー情報を管理
-type User struct {
-	Id          string             `db:"primarykey" column:"id"`                         //ユーザーID
-	Name        string             `db:"unique" column:"name" json:"name"`               //ユーザー名
-	MailAddress string             `db:"unique" column:"mailAddress" json:"mailAddress"` //メールアドレス
-	PassWord    string             `db:"unique" column:"passWord" json:"passWord"`       //パスワード
-	PrivateKey  ed25519.PrivateKey `db:"" column:"privateKey"`                           //認証トークンの秘密鍵
-
-}
-
 //トークン生成用の定数類
 //フッター
 const footer = "FOOTER"
@@ -32,14 +23,14 @@ const footer = "FOOTER"
 const expirationTime = 30 * time.Minute
 
 func UserCreate_Impl(r *http.Request) (string, error) {
-	jsonUser := User{}
+	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
 	err := json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
 		return "", commonErrors.IncorrectJsonBodyError()
 	}
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+
+	DBMap := model.NewDBMap(model.DB)
 	dbHandler, _ := DBMap.Begin()
 
 	//IDはUUIDで生成
@@ -63,17 +54,16 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 }
 
 func UserSignIn(w http.ResponseWriter, r *http.Request) {
-	jsonUser := User{}
+	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
 	err := json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+	DBMap := model.NewDBMap(model.DB)
 	//ユーザー
-	user := User{}
+	user := usermodel.User{}
 	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
@@ -82,10 +72,6 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	expiration := time.Now().Add(expirationTime)
 	jsonToken := paseto.JSONToken{
-		Audience:   "Audience", // 利用ユーザー判別するユニーク値
-		Issuer:     "Issuer",   // 利用システム
-		Subject:    "WebAPI",   // 利用機能
-		Jti:        "UUID",     // UUID
 		Expiration: expiration, // 失効日時
 		IssuedAt:   now,        // 発行日時
 		NotBefore:  now,        // 有効化日時
@@ -118,12 +104,10 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 }
 
 //jsonTokenからユーザーを取得
-func GetOneUser(jsonToken paseto.JSONToken) (User, error) {
+func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 	id := jsonToken.Get("ID")
-	loginUser := User{}
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
-	err := DBMap.SelectOne(&loginUser, "SELECT * FROM user WHERE ID = ?", id)
+	loginUser := usermodel.User{}
+	err := usermodel.GetOneUser(&loginUser, id)
 	if err != nil {
 		return loginUser, commonErrors.FailedToSearchError()
 
@@ -166,7 +150,7 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 		return err
 
 	}
-	jsonUser := User{}
+	jsonUser := usermodel.User{}
 	//jsonボディからメールアドレスとパスワードを取得
 	err = json.NewDecoder(r.Body).Decode(&jsonUser)
 	if err != nil {
@@ -174,8 +158,7 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 		return commonErrors.IncorrectJsonBodyError()
 	}
 	loginUser.Name = jsonUser.Name
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+	DBMap := model.NewDBMap(model.DB)
 	dbHandler, _ := DBMap.Begin()
 	_, err2 := dbHandler.Update(loginUser)
 	if err2 != nil {

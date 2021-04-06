@@ -29,14 +29,13 @@ func ShowOwnCharacters_Impl(w http.ResponseWriter, r *http.Request) ([]Character
 		return []Character{}, commonErrors.FailedToGetUserError()
 	}
 	//DBに接続して所持キャラクター一覧を取得
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+	DBMap := model.NewDBMap(model.DB)
 	OwnCharacters := []OwnCharacter{}
 	DBMap.Select(&OwnCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", loginUser.Id)
 	Characters := []Character{}
-	for _, ownCaracter := range OwnCharacters {
+	for _, ownCharacter := range OwnCharacters {
 		Characters_tmp := []Character{}
-		DBMap.Select(&Characters_tmp, "SELECT * FROM characters WHERE id=?", ownCaracter.CharacterId)
+		DBMap.Select(&Characters_tmp, "SELECT * FROM characters WHERE id=?", ownCharacter.CharacterId)
 		Characters = append(Characters, Characters_tmp...)
 	}
 

@@ -13,6 +13,7 @@ import (
 	"CACyberDojo/handler/characterhandler"
 	"CACyberDojo/handler/gachahandler"
 	"CACyberDojo/handler/userhandler"
+	"CACyberDojo/model"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -21,6 +22,10 @@ import (
 var decoder = schema.NewDecoder()
 
 func main() {
+	err := model.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 	//ユーザー認証をする処理用のルーター
 	AuthorizationRouteCreator := mux.NewRouter()
 	//ユーザー認証をしない処理用のルーター

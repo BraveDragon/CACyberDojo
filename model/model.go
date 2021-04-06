@@ -9,19 +9,16 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
-func Init() *sql.DB {
+func Init() error {
 	var err error
-	//DBがnilの時のみDBを生成
-	if db == nil {
-		db, err = sql.Open("mysql", "root:@APIDB")
-		if err != nil {
-			log.Fatal(err)
-			return nil
-		}
+	DB, err = sql.Open("mysql", "root:@APIDB")
+	if err != nil {
+		log.Fatal(err)
+		return err
 	}
-	return db
+	return nil
 
 }
 

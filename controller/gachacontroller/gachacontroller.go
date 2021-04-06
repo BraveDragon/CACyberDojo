@@ -51,10 +51,9 @@ func DefaultDrawer(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []ch
 
 //idに合うガチャをdrawTimes回引く
 func drawGacha(id int, drawTimes int, drawer ...Drawer) ([]charactercontroller.Character, error) {
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+	DBMap := model.NewDBMap(model.DB)
 	var gachaContents []Gacha
-	DBMap.Select(&gachaContents, "SELECT content FROM gachas WHERE id=?", id)
+	DBMap.Select(&gachaContents, "SELECT * FROM gachas WHERE id=?", id)
 	if drawTimes == 0 {
 		return []charactercontroller.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
@@ -92,9 +91,8 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	//結果をDBに格納するためにDB,DBMapを取得
-	DB := model.Init()
-	DBMap := model.NewDBMap(DB)
+	//結果をDBに格納するためにDBMapを取得
+	DBMap := model.NewDBMap(model.DB)
 	dbhandler, err := DBMap.Begin()
 	if err != nil {
 		return err
