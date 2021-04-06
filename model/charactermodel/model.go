@@ -6,6 +6,7 @@ import (
 	"CACyberDojo/model/usermodel"
 )
 
+//キャラクターIDからキャラクターを返す
 func SearchCharacterById(characterId int) (Character, error) {
 	DBMap := model.NewDBMap(model.DB)
 	result := Character{}
@@ -39,6 +40,7 @@ func GetOwnCharacters(id string) ([]Character, error) {
 
 }
 
+//所持キャラクターを追加する
 func AddOwnCharacters(loginUser usermodel.User, results []Character) error {
 
 	DBMap := model.NewDBMap(model.DB)
