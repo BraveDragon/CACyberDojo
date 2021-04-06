@@ -38,14 +38,20 @@ func UserAuthorization(user *User, mailAddress string, password string) error {
 //ユーザー名を引数の内容に更新
 func UpdateUser(user User) error {
 	DBMap := model.NewDBMap(model.DB)
-	dbHandler, _ := DBMap.Begin()
-	_, err := dbHandler.Update(user)
+	dbHandler, err := DBMap.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = dbHandler.Update(user)
 
 	if err != nil {
 		return err
 	}
 	//修正したらDBに反映
-	dbHandler.Commit()
+	err = dbHandler.Commit()
+	if err != nil {
+		return err
+	}
 	return nil
 
 }

@@ -2,33 +2,25 @@ package gachacontroller
 
 import (
 	"CACyberDojo/commonErrors"
-	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/usercontroller"
-	"CACyberDojo/model"
+	"CACyberDojo/model/charactermodel"
+	"CACyberDojo/model/gachamodel"
 	"encoding/json"
 	"math/rand"
 	"net/http"
 	"time"
-
-	"github.com/go-gorp/gorp"
 )
-
-type Gacha struct {
-	GachaId     int     `db:"" column:"gachaId"`
-	CharacterId int     `db:"" column:"characterId"`
-	DropRate    float64 `db:"" column:"dropRate"`
-}
 
 type GachaRequest struct {
 	GachaId   int `json:"gachaId"`
 	DrawTimes int `json:"drawTimes"`
 }
 
-type Drawer func(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []charactercontroller.Character
+type Drawer func(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character
 
 //確変も何も行わない普通のガチャ。drawGachaのデフォルト。
-func DefaultDrawer(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []charactercontroller.Character {
-	results := []charactercontroller.Character{}
+func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character {
+	results := []charactermodel.Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
 		rand.Seed(time.Now().UnixNano())
 		//0以上1未満の乱数を生成(結果となる)
@@ -38,8 +30,10 @@ func DefaultDrawer(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []ch
 			//lotteryからcontent.DropRateの値を引いていき、lotteryが0以下になった時のcontentを結果とする
 			lottery -= gachaContent.DropRate
 			if lottery <= 0 {
-				result := charactercontroller.Character{}
-				DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", gachaContent.CharacterId)
+				result, err := charactermodel.SearchCharacterById(gachaContent.CharacterId)
+				if err != nil {
+					return []charactermodel.Character{}
+				}
 				results = append(results, result)
 			}
 
@@ -50,22 +44,15 @@ func DefaultDrawer(DBMap *gorp.DbMap, drawTimes int, gachaContents []Gacha) []ch
 }
 
 //idに合うガチャをdrawTimes回引く
-func drawGacha(id int, drawTimes int, drawer ...Drawer) ([]charactercontroller.Character, error) {
-	DBMap := model.NewDBMap(model.DB)
-	var gachaContents []Gacha
-	DBMap.Select(&gachaContents, "SELECT * FROM gachas WHERE id=?", id)
+func drawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
+
+	var gachaContents []gachamodel.Gacha
+	gachamodel.SelectGacha(&gachaContents, id)
 	if drawTimes == 0 {
-		return []charactercontroller.Character{}, commonErrors.TrytoDrawZeroTimes()
+		return []charactermodel.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
-	//ガチャのロジック指定がない時はデフォルトのガチャを使う
-	if len(drawer) == 0 {
-		drawer = append(drawer, DefaultDrawer)
-	}
-	//ガチャのロジック指定が2つ以上の時はエラーを返す
-	if len(drawer) > 1 {
-		return []charactercontroller.Character{}, commonErrors.InvalidSettingOfDrawerError()
-	}
-	results := drawer[0](DBMap, drawTimes, gachaContents)
+
+	results := draw(drawTimes, gachaContents)
 
 	return results, nil
 }
@@ -91,16 +78,10 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	//結果をDBに格納するためにDBMapを取得
-	DBMap := model.NewDBMap(model.DB)
-	dbhandler, err := DBMap.Begin()
+	err = charactermodel.AddOwnCharacters(loginUser, results)
 	if err != nil {
 		return err
 	}
-	for _, result := range results {
-		dbhandler.Insert(charactercontroller.OwnCharacter{UserId: loginUser.Id, CharacterId: result.Id})
-	}
-	dbhandler.Commit()
 	return nil
 
 }
