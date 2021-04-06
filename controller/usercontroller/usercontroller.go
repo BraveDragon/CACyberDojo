@@ -1,7 +1,6 @@
 package usercontroller
 
 import (
-	"CACyberDojo/model"
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -30,9 +29,6 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 		return "", commonErrors.IncorrectJsonBodyError()
 	}
 
-	DBMap := model.NewDBMap(model.DB)
-	dbHandler, _ := DBMap.Begin()
-
 	//IDはUUIDで生成
 	UUID, _ := uuid.NewUUID()
 	id := UUID.String()
@@ -45,9 +41,8 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 	b, _ := hex.DecodeString(id)
 	privateKey := ed25519.PrivateKey(b)
 	jsonUser.PrivateKey = privateKey
-	//DBに追加＋反映
-	dbHandler.Insert()
-	dbHandler.Commit()
+
+	usermodel.CreateUser(jsonUser)
 
 	return jsonUser.Name, nil
 
@@ -60,11 +55,10 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	DBMap := model.NewDBMap(model.DB)
 	//ユーザー
 	user := usermodel.User{}
-	err = DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", jsonUser.MailAddress, jsonUser.PassWord)
+	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
+	err = usermodel.UserAuthorization(&user, jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		w.WriteHeader(http.StatusBadRequest)
@@ -158,19 +152,16 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 		return commonErrors.IncorrectJsonBodyError()
 	}
 	loginUser.Name = jsonUser.Name
-	DBMap := model.NewDBMap(model.DB)
-	dbHandler, _ := DBMap.Begin()
-	_, err2 := dbHandler.Update(loginUser)
-	if err2 != nil {
-		return err2
+	err = usermodel.UpdateUser(loginUser)
+	if err != nil {
+		return err
 	}
 
-	//修正したらDBに反映
-	dbHandler.Commit()
 	return nil
 
 }
 
+//トークンのリフレッシュ用のミドルウェア
 func RefreshMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
