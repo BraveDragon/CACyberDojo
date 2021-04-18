@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+//ユーザー認証用のミドルウェア
 func AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -38,5 +39,23 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 			}
 			next.ServeHTTP(w, r)
 		})
+
+}
+
+//CORS対応用のミドルウェア
+func EnableCorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "*")
+		//プリフライトリクエストの場合の処理
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+		return
+
+	})
 
 }

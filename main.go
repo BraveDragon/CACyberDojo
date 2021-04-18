@@ -9,10 +9,10 @@ import (
 	"log"
 	"net/http"
 
-	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/characterhandler"
 	"CACyberDojo/handler/gachahandler"
 	"CACyberDojo/handler/userhandler"
+	"CACyberDojo/middleware"
 	"CACyberDojo/model"
 
 	"github.com/gorilla/mux"
@@ -31,17 +31,19 @@ func main() {
 	//ユーザー認証をしない処理用のルーター
 	OtherRouteCreator := mux.NewRouter()
 	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
-	AuthorizationRouteCreator.Use(usercontroller.AuthorizationMiddleware)
-	AuthorizationRouteCreator.Use(usercontroller.RefreshMiddleware)
+	AuthorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
+	AuthorizationRouteCreator.Use(middleware.RefreshMiddleware)
+	//CORS対応もミドルウェアで行う
+	AuthorizationRouteCreator.Use(middleware.EnableCorsMiddleware)
 
 	AuthorizationRouteCreator.Host("https://localhost:8080")
 	AuthorizationRouteCreator.PathPrefix("https")
-	AuthorizationRouteCreator.Methods("GET", "POST", "PUT")
 	AuthorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
+	//CORS対応もミドルウェアで行う
+	OtherRouteCreator.Use(middleware.EnableCorsMiddleware)
 
 	OtherRouteCreator.Host("https://localhost:8080")
 	OtherRouteCreator.PathPrefix("https")
-	OtherRouteCreator.Methods("GET", "POST", "PUT")
 	OtherRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 
 	//エンドポイントを用意
