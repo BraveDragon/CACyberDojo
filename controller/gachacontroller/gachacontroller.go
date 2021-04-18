@@ -2,19 +2,11 @@ package gachacontroller
 
 import (
 	"CACyberDojo/commonErrors"
-	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/model/charactermodel"
 	"CACyberDojo/model/gachamodel"
-	"encoding/json"
 	"math/rand"
-	"net/http"
 	"time"
 )
-
-type GachaRequest struct {
-	GachaId   int `json:"gachaId"`
-	DrawTimes int `json:"drawTimes"`
-}
 
 type Drawer func(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character
 
@@ -44,7 +36,7 @@ func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Char
 }
 
 //idに合うガチャをdrawTimes回引く
-func drawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
+func DrawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 
 	var gachaContents []gachamodel.Gacha
 	gachamodel.SelectGacha(&gachaContents, id)
@@ -55,33 +47,4 @@ func drawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 	results := draw(drawTimes, gachaContents)
 
 	return results, nil
-}
-
-func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
-	gachaRequest := GachaRequest{}
-	err := json.NewDecoder(r.Body).Decode(&gachaRequest)
-	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
-		return commonErrors.FailedToCreateTokenError()
-	}
-	results, err := drawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
-	if err != nil {
-		return err
-	}
-	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
-	if err != nil {
-		return commonErrors.FailedToAuthorizationError()
-	}
-	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(jsonToken)
-	if err != nil {
-		return err
-	}
-	err = charactermodel.AddOwnCharacters(loginUser, results)
-	if err != nil {
-		return err
-	}
-	return nil
-
 }
