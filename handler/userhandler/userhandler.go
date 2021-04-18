@@ -19,18 +19,11 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
-	(*w).Header().Add("Access-Control-Allow-Headers", "*")
-}
-
 //トークンのチェック
 //ユーザー情報取得はuserGet_impl()に丸投げ
 func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		enableCors(&w)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
