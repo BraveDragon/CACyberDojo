@@ -48,7 +48,7 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	err = charactercontroller.AddOwnCharacters(loginUser, results)
+	err = charactercontroller.AddOwnCharacters(loginUser.Id, results)
 	if err != nil {
 		return err
 	}

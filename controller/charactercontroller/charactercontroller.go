@@ -2,13 +2,26 @@ package charactercontroller
 
 import (
 	"CACyberDojo/model/charactermodel"
-	"CACyberDojo/model/usermodel"
 )
 
 func GetOwnCharacters(id string) ([]charactermodel.Character, error) {
-	return charactermodel.GetOwnCharacters(id)
+	characterIds, err := charactermodel.GetOwnCharacterIDs(id)
+	if err != nil {
+		return []charactermodel.Character{}, err
+	}
+	results := []charactermodel.Character{}
+	for _, characterId := range characterIds {
+		character, err := charactermodel.SearchCharacterById(characterId)
+		if err != nil {
+			return []charactermodel.Character{}, err
+		}
+		results = append(results, character)
+	}
+
+	return results, nil
 }
 
-func AddOwnCharacters(loginUser usermodel.User, results []charactermodel.Character) error {
-	return charactermodel.AddOwnCharacters(loginUser, results)
+//指定したユーザーIDに所持キャラクターを追加
+func AddOwnCharacters(Userid string, results []charactermodel.Character) error {
+	return charactermodel.AddOwnCharacters(Userid, results)
 }

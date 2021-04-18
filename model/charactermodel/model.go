@@ -3,7 +3,6 @@ package charactermodel
 import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
-	"CACyberDojo/model/usermodel"
 )
 
 //キャラクターIDからキャラクターを返す
@@ -17,39 +16,32 @@ func SearchCharacterById(characterId int) (Character, error) {
 	return result, nil
 }
 
-//ユーザーIDから所有するキャラクター一覧を取得
-func GetOwnCharacters(id string) ([]Character, error) {
+//ユーザーIDから所有するキャラクターのキャラクターIDを全て取得
+func GetOwnCharacterIDs(id string) ([]int, error) {
 	ownCharacters := []OwnCharacter{}
 	DBMap := model.NewDBMap(model.DB)
 	_, err := DBMap.Select(&ownCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", id)
 	if err != nil {
-		return []Character{}, commonErrors.FailedToSearchError()
+		return []int{-1}, commonErrors.FailedToSearchError()
 	}
-
-	characters := []Character{}
+	results := []int{}
 	for _, ownCharacter := range ownCharacters {
-		Characters_tmp := []Character{}
-		_, err = DBMap.Select(&Characters_tmp, "SELECT * FROM characters WHERE id=?", ownCharacter.CharacterId)
-		if err != nil {
-			return []Character{}, commonErrors.FailedToSearchError()
-		}
-		characters = append(characters, Characters_tmp...)
+		results = append(results, ownCharacter.CharacterId)
 	}
-
-	return characters, nil
+	return results, nil
 
 }
 
 //所持キャラクターを追加する
-func AddOwnCharacters(loginUser usermodel.User, results []Character) error {
+func AddOwnCharacters(Userid string, characters []Character) error {
 
 	DBMap := model.NewDBMap(model.DB)
 	dbhandler, err := DBMap.Begin()
 	if err != nil {
 		return err
 	}
-	for _, result := range results {
-		err = dbhandler.Insert(OwnCharacter{UserId: loginUser.Id, CharacterId: result.Id})
+	for _, character := range characters {
+		err := dbhandler.Insert(OwnCharacter{UserId: Userid, CharacterId: character.Id})
 		if err != nil {
 			return err
 		}
