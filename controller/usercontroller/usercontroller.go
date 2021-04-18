@@ -89,14 +89,6 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func AuthorizationMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			UserSignIn(w, r)
-			next.ServeHTTP(w, r)
-		})
-}
-
 //jsonTokenからユーザーを取得
 func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 	id := jsonToken.Get("ID")
@@ -158,32 +150,5 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return nil
-
-}
-
-//トークンのリフレッシュ用のミドルウェア
-func RefreshMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			// トークンの検証(有効かどうか)
-			_, jsonToken, _, err := CheckPasetoAuth(w, r)
-			if err != nil {
-				//トークンが無効ならエラーを返す
-				w.WriteHeader(http.StatusUnauthorized)
-
-			}
-			now := time.Now()
-			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
-			if jsonToken.Expiration.After(now) == true {
-				w.WriteHeader(http.StatusOK)
-
-			} else {
-				//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
-				UserSignIn(w, r)
-				w.WriteHeader(http.StatusOK)
-
-			}
-			next.ServeHTTP(w, r)
-		})
 
 }
