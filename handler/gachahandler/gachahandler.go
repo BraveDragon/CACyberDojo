@@ -28,16 +28,6 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
-	gachaRequest := GachaRequest{}
-	err := json.NewDecoder(r.Body).Decode(&gachaRequest)
-	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
-		return commonErrors.FailedToCreateTokenError()
-	}
-	results, err := gachacontroller.DrawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
-	if err != nil {
-		return err
-	}
 	//ユーザーを取得するためにjsonTokenを取得
 	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
 	if err != nil {
@@ -48,6 +38,18 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	//何のガチャを何回引くかをリクエストで受け取る
+	gachaRequest := GachaRequest{}
+	err = json.NewDecoder(r.Body).Decode(&gachaRequest)
+	if err != nil {
+		//bodyの構造がおかしい時はエラーを返す
+		return commonErrors.FailedToCreateTokenError()
+	}
+	results, err := gachacontroller.DrawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
+	if err != nil {
+		return err
+	}
+
 	err = charactercontroller.AddOwnCharacters(loginUser.Id, results)
 	if err != nil {
 		return err
