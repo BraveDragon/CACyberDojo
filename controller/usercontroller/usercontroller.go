@@ -1,14 +1,13 @@
 package usercontroller
 
 import (
+	"CACyberDojo/commonErrors"
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"CACyberDojo/commonErrors"
 
 	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
@@ -99,56 +98,5 @@ func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 
 	}
 	return loginUser, nil
-
-}
-
-//トークンの検証
-func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
-	bearerToken := r.Header.Get("Authorization")
-
-	if bearerToken == "" {
-		//  Authorizationヘッダーがない時はエラーを返す
-		w.WriteHeader(http.StatusUnauthorized)
-		return "", paseto.JSONToken{}, "", commonErrors.NoAuthorizationheaderError()
-	}
-	tokenStr := bearerToken[7:]
-	var newJsonToken paseto.JSONToken
-	var newFooter string
-	publicKey, _, _ := ed25519.GenerateKey(nil)
-	err := paseto.NewV2().Verify(tokenStr, publicKey, &newJsonToken, &newFooter)
-	if err != nil {
-		return "", paseto.JSONToken{}, "", commonErrors.IncorrectTokenError()
-	}
-
-	return tokenStr, newJsonToken, newFooter, nil
-
-}
-
-func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
-	// 誰がログインしているかをチェック
-	_, jsonToken, _, err := CheckPasetoAuth(w, r)
-	if err != nil {
-		return commonErrors.FailedToAuthorizationError()
-	}
-	//トークンから主キーのユーザーIDを取得
-	loginUser, err := GetOneUser(jsonToken)
-	if err != nil {
-		return err
-
-	}
-	jsonUser := usermodel.User{}
-	//jsonボディからメールアドレスとパスワードを取得
-	err = json.NewDecoder(r.Body).Decode(&jsonUser)
-	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
-		return commonErrors.IncorrectJsonBodyError()
-	}
-	loginUser.Name = jsonUser.Name
-	err = usermodel.UpdateUser(loginUser)
-	if err != nil {
-		return err
-	}
-
-	return nil
 
 }

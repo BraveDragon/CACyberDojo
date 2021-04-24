@@ -13,7 +13,7 @@ var DB *sql.DB
 
 func Init() error {
 	var err error
-	DB, err = sql.Open("mysql", "root:@APIDB")
+	DB, err = sql.Open("mysql", "MineDragon:@/cacyberdojo")
 	if err != nil {
 		log.Fatal(err)
 		return err

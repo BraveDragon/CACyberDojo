@@ -4,6 +4,7 @@ import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/handler/userhandler"
 	"CACyberDojo/model/charactermodel"
 	"fmt"
 	"net/http"
@@ -29,7 +30,7 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 
 func ShowOwnCharacters_Impl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
 	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
+	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {
 		return []charactermodel.Character{}, commonErrors.FailedToAuthorizationError()
 	}

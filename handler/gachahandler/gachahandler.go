@@ -5,6 +5,7 @@ import (
 	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/gachacontroller"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/handler/userhandler"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,7 +30,7 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 
 func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := usercontroller.CheckPasetoAuth(w, r)
+	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {
 		return commonErrors.FailedToAuthorizationError()
 	}

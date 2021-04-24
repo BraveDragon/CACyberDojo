@@ -16,10 +16,7 @@ import (
 	"CACyberDojo/model"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/schema"
 )
-
-var decoder = schema.NewDecoder()
 
 func main() {
 	err := model.Init()
