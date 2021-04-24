@@ -2,10 +2,10 @@ package usercontroller
 
 import (
 	"CACyberDojo/commonErrors"
+	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -23,9 +23,9 @@ const expirationTime = 30 * time.Minute
 func UserCreate_Impl(r *http.Request) (string, error) {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
-	err := json.NewDecoder(r.Body).Decode(&jsonUser)
+	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
-		return "", commonErrors.IncorrectJsonBodyError()
+		return "", err
 	}
 
 	//IDはUUIDで生成
@@ -50,7 +50,7 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
-	err := json.NewDecoder(r.Body).Decode(&jsonUser)
+	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}

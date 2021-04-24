@@ -2,12 +2,12 @@ package userhandler
 
 import (
 	"crypto/ed25519"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
 
 	"github.com/o1egl/paseto"
@@ -27,10 +27,9 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 	}
 	jsonUser := usermodel.User{}
 	//jsonボディからメールアドレスとパスワードを取得
-	err = json.NewDecoder(r.Body).Decode(&jsonUser)
+	err = handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
-		return commonErrors.IncorrectJsonBodyError()
+		return err
 	}
 	loginUser.Name = jsonUser.Name
 	err = usermodel.UpdateUser(loginUser)
