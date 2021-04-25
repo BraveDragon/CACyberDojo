@@ -3,6 +3,7 @@ package userhandler
 import (
 	"crypto/ed25519"
 	"fmt"
+	"log"
 	"net/http"
 
 	"CACyberDojo/commonErrors"
@@ -46,6 +47,7 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 func UserCreate(w http.ResponseWriter, r *http.Request) {
 	name, err := usercontroller.UserCreateImpl(r)
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -54,6 +56,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
 	//w.Write()のエラーチェック
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -65,7 +68,7 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 	bearerToken := r.Header.Get("Authorization")
 
 	if bearerToken == "" {
-		//  Authorizationヘッダーがない時はエラーを返す
+		//Authorizationヘッダーがない時はエラーを返す
 		w.WriteHeader(http.StatusUnauthorized)
 		return "", paseto.JSONToken{}, "", commonErrors.NoAuthorizationheaderError()
 	}
@@ -93,7 +96,9 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 		_, _, _, err := CheckPasetoAuth(w, r)
 		if err != nil {
 			_, err := w.Write([]byte("Permission error."))
+			log.Printf(err.Error())
 			if err != nil {
+				log.Printf(err.Error())
 				w.WriteHeader(http.StatusBadRequest)
 			}
 			w.WriteHeader(http.StatusForbidden)
@@ -110,20 +115,24 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_, err = w.Write([]byte("Permission error."))
 		if err != nil {
+			log.Printf(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return
 	}
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }
@@ -132,6 +141,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	err := UserUpdateImpl(w, r)
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -3,6 +3,7 @@ package middleware
 import (
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/userhandler"
+	"log"
 	"net/http"
 	"time"
 )
@@ -24,6 +25,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 			_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 			if err != nil {
 				//トークンが無効ならエラーを返す
+				log.Printf(err.Error())
 				w.WriteHeader(http.StatusUnauthorized)
 
 			}

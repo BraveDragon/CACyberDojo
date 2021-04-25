@@ -7,9 +7,11 @@ import (
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
+	"log"
 	"net/http"
 )
 
+//GachaRequest : ガチャを引く時のリクエストの中身.
 type GachaRequest struct {
 	GachaId   int `json:"gachaId"`
 	DrawTimes int `json:"drawTimes"`
@@ -18,14 +20,14 @@ type GachaRequest struct {
 //GachaDrawHandler : ガチャ処理のハンドラ.処理本体はGachaDrawHandlerImpl()に丸投げ.
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	err := GachaDrawHandlerImpl(w, r)
-	if err.Error() == commonErrors.FailedToAuthorizationError().Error() {
-		_, err = w.Write([]byte("Permission error."))
+	if err != nil {
+		_, err = w.Write([]byte("Failed to draw gacha."))
+		//エラーが出たらエラーをlogに吐く
+		log.Printf(err.Error())
 		if err != nil {
+			log.Printf(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		return
-	} else if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 }
