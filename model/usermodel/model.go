@@ -2,7 +2,7 @@ package usermodel
 
 import "CACyberDojo/model"
 
-//ユーザーを新規作成してDBに追加
+//CreateUser : ユーザーを新規作成してDBに追加.
 func CreateUser(user User) error {
 	DBMap := model.NewDBMap(model.DB)
 	dbHandler, err := DBMap.Begin()
@@ -23,19 +23,19 @@ func CreateUser(user User) error {
 
 }
 
-//IDからユーザーを取得
+//GetOneUser : IDからユーザーを取得.
 func GetOneUser(user *User, id string) error {
 	DBMap := model.NewDBMap(model.DB)
 	return DBMap.SelectOne(&user, "SELECT * FROM user WHERE ID = ?", id)
 }
 
-//ユーザーのメールアドレスとパスワードがあるかチェック
+//UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
 func UserAuthorization(user *User, mailAddress string, password string) error {
 	DBMap := model.NewDBMap(model.DB)
 	return DBMap.SelectOne(&user, "SELECT * FROM users WHERE mailAddress=? AND passWord=?", mailAddress, password)
 }
 
-//ユーザー名を引数の内容に更新
+//UpdateUser : ユーザー名を引数の内容に更新
 func UpdateUser(user User) error {
 	DBMap := model.NewDBMap(model.DB)
 	dbHandler, err := DBMap.Begin()

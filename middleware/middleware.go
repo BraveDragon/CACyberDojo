@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//ユーザー認証用のミドルウェア
+//AuthorizationMiddleware : ユーザー認証用のミドルウェア.
 func AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +16,7 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 		})
 }
 
-//トークンのリフレッシュ用のミドルウェア
+//RefreshMiddleware : トークンのリフレッシュ用のミドルウェア.
 func RefreshMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 
 }
 
-//CORS対応用のミドルウェア
+//EnableCorsMiddleware : CORS対応用のミドルウェア.
 func EnableCorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")

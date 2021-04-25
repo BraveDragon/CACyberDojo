@@ -15,9 +15,9 @@ type GachaRequest struct {
 	DrawTimes int `json:"drawTimes"`
 }
 
-//ガチャ処理のハンドラ
+//GachaDrawHandler : ガチャ処理のハンドラ.処理本体はGachaDrawHandlerImpl()に丸投げ.
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
-	err := GachaDrawHandler_Impl(w, r)
+	err := GachaDrawHandlerImpl(w, r)
 	if err.Error() == commonErrors.FailedToAuthorizationError().Error() {
 		_, err = w.Write([]byte("Permission error."))
 		if err != nil {
@@ -30,7 +30,8 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
+//GachaDrawHandlerImpl : GachaDrawHandler()の処理の本体.
+func GachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//ユーザーを取得するためにjsonTokenを取得
 	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {

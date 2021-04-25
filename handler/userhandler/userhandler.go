@@ -13,7 +13,8 @@ import (
 	"github.com/o1egl/paseto"
 )
 
-func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
+//UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
+func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	// 誰がログインしているかをチェック
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
@@ -41,8 +42,9 @@ func UserUpdate_Impl(w http.ResponseWriter, r *http.Request) error {
 
 }
 
+//UserCreate : ユーザー作成する.
 func UserCreate(w http.ResponseWriter, r *http.Request) {
-	name, err := usercontroller.UserCreate_Impl(r)
+	name, err := usercontroller.UserCreateImpl(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -50,6 +52,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	//全て終わればメッセージを出して終了
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
+	//w.Write()のエラーチェック
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -57,7 +60,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//トークンの検証
+//CheckPasetoAuth : トークンの検証.
 func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
 	bearerToken := r.Header.Get("Authorization")
 
@@ -79,8 +82,7 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 
 }
 
-//トークンのチェック
-//ユーザー情報取得はuserGet_impl()に丸投げ
+//UserGet : トークンのチェックを行う.ユーザー情報取得はUserGetImpl()に丸投げ.
 func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -102,8 +104,8 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 	}
 }
 
-//ユーザー情報取得処理
-func UserGet_impl(w http.ResponseWriter, r *http.Request) {
+//UserGetImpl : ユーザー情報取得処理を行う.
+func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
 		_, err = w.Write([]byte("Permission error."))
@@ -126,8 +128,9 @@ func UserGet_impl(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//UserUpdate : ユーザー情報の更新.処理の中身はUserUpdateImpl()に丸投げ.
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
-	err := UserUpdate_Impl(w, r)
+	err := UserUpdateImpl(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

@@ -10,9 +10,9 @@ import (
 	"net/http"
 )
 
-//所持キャラクター一覧表示のハンドラ
+//ShowOwnCharacters : 所持キャラクター一覧表示のハンドラ。実際の処理はShowOwnCharactersImpl()で行う.
 func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
-	Characters, err := ShowOwnCharacters_Impl(w, r)
+	Characters, err := ShowOwnCharactersImpl(w, r)
 
 	if err.Error() == commonErrors.FailedToAuthorizationError().Error() {
 		_, err := w.Write([]byte("Permission error."))
@@ -35,7 +35,8 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ShowOwnCharacters_Impl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
+//ShowOwnCharactersImpl : ShowOwnCharactersの処理の本体.
+func ShowOwnCharactersImpl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
 	//ユーザーを取得するためにjsonTokenを取得
 	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {

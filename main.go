@@ -48,7 +48,7 @@ func main() {
 	OtherRouteCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
 
 	//ユーザー情報取得
-	AuthorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGet_impl)).Methods("GET")
+	AuthorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGetImpl)).Methods("GET")
 
 	//ユーザー情報更新
 	AuthorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")

@@ -2,7 +2,7 @@ package usermodel
 
 import "crypto/ed25519"
 
-//User: ユーザー情報を管理
+//User: ユーザー情報を管理.
 type User struct {
 	Id          string             `db:"primarykey" column:"id"`                         //ユーザーID
 	Name        string             `db:"unique" column:"name" json:"name"`               //ユーザー名

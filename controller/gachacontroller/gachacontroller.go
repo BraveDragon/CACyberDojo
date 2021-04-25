@@ -8,9 +8,10 @@ import (
 	"time"
 )
 
+//Drawer : ガチャのロジック記述用の関数の型.
 type Drawer func(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character
 
-//確変も何も行わない普通のガチャ。drawGachaのデフォルト。
+//draw : 確変も何も行わない普通のガチャ.
 func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character {
 	results := []charactermodel.Character{}
 	for i := 0; i < (drawTimes - 1); i++ {
@@ -35,7 +36,7 @@ func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Char
 	return results
 }
 
-//idに合うガチャをdrawTimes回引く
+//DrawGacha : idに合うガチャをdrawTimes回引く.
 func DrawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 
 	var gachaContents []gachamodel.Gacha

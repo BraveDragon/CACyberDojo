@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-//JSONボディから必要なデータを取得
+//ParseJsonBody : JSONボディから必要なデータを取得.
 func ParseJsonBody(r *http.Request, decordtarget interface{}) error {
 	err := json.NewDecoder(r.Body).Decode(&decordtarget)
 	if err != nil {

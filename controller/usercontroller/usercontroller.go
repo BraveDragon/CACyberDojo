@@ -20,7 +20,8 @@ const footer = "FOOTER"
 //トークンの有効期限
 const expirationTime = 30 * time.Minute
 
-func UserCreate_Impl(r *http.Request) (string, error) {
+//UserCreateImpl : userhandler.UserGet()の処理の本体.ユーザー情報取得を行う.
+func UserCreateImpl(r *http.Request) (string, error) {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
 	err := handlerutil.ParseJsonBody(r, &jsonUser)
@@ -50,6 +51,7 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 
 }
 
+//UserSignIn : ユーザーのサインイン処理を行う.
 func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
@@ -91,7 +93,7 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//jsonTokenからユーザーを取得
+//GetOneUser : jsonTokenからユーザーを取得.
 func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 	id := jsonToken.Get("ID")
 	loginUser := usermodel.User{}
