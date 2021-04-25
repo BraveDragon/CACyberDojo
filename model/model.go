@@ -14,7 +14,7 @@ var DB *sql.DB
 func Init() error {
 	var err error
 	//sql.Open()の第2引数は環境に合わせて修正すること
-	DB, err = sql.Open("mysql", "MineDragon:@/cacyberdojo")
+	DB, err = sql.Open("mysql", "")
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -24,5 +24,5 @@ func Init() error {
 }
 
 func NewDBMap(DB *sql.DB) *gorp.DbMap {
-	return &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+	return &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
 }

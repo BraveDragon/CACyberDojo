@@ -14,7 +14,7 @@ import (
 func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	Characters, err := ShowOwnCharacters_Impl(w, r)
 
-	if err.Error() != commonErrors.FailedToAuthorizationError().Error() {
+	if err.Error() == commonErrors.FailedToAuthorizationError().Error() {
 		_, err := w.Write([]byte("Permission error."))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
