@@ -39,7 +39,10 @@ func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Char
 func DrawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 
 	var gachaContents []gachamodel.Gacha
-	gachamodel.SelectGacha(&gachaContents, id)
+	err := gachamodel.SelectGacha(&gachaContents, id)
+	if err != nil {
+		return nil, err
+	}
 	if drawTimes == 0 {
 		return []charactermodel.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}

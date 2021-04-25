@@ -5,9 +5,8 @@ import (
 	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/gachacontroller"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
-	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -20,7 +19,10 @@ type GachaRequest struct {
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	err := GachaDrawHandler_Impl(w, r)
 	if err.Error() == commonErrors.FailedToAuthorizationError().Error() {
-		w.Write([]byte(fmt.Sprintf("Permission error.")))
+		_, err = w.Write([]byte("Permission error."))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -41,7 +43,7 @@ func GachaDrawHandler_Impl(w http.ResponseWriter, r *http.Request) error {
 	}
 	//何のガチャを何回引くかをリクエストで受け取る
 	gachaRequest := GachaRequest{}
-	err = json.NewDecoder(r.Body).Decode(&gachaRequest)
+	err = handlerutil.ParseJsonBody(r, &gachaRequest)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		return commonErrors.FailedToCreateTokenError()

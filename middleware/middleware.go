@@ -29,7 +29,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 			}
 			now := time.Now()
 			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
-			if jsonToken.Expiration.After(now) == true {
+			if jsonToken.Expiration.After(now) {
 				w.WriteHeader(http.StatusOK)
 
 			} else {
@@ -55,7 +55,6 @@ func EnableCorsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
-		return
 
 	})
 

@@ -41,7 +41,10 @@ func UserCreate_Impl(r *http.Request) (string, error) {
 	privateKey := ed25519.PrivateKey(b)
 	jsonUser.PrivateKey = privateKey
 
-	usermodel.CreateUser(jsonUser)
+	err = usermodel.CreateUser(jsonUser)
+	if err != nil {
+		return "", err
+	}
 
 	return jsonUser.Name, nil
 

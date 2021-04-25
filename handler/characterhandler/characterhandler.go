@@ -15,7 +15,10 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	Characters, err := ShowOwnCharacters_Impl(w, r)
 
 	if err.Error() != commonErrors.FailedToAuthorizationError().Error() {
-		w.Write([]byte(fmt.Sprintf("Permission error.")))
+		_, err := w.Write([]byte("Permission error."))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -23,7 +26,11 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, character := range Characters {
-		w.Write([]byte(fmt.Sprintf(character.Name)))
+		_, err := w.Write([]byte(fmt.Sprintf(character.Name)))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 	}
 
 }

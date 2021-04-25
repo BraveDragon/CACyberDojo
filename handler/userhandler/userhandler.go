@@ -49,7 +49,11 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	//全て終わればメッセージを出して終了
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("User %s created", name)))
+	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 }
 
@@ -86,7 +90,10 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 		}
 		_, _, _, err := CheckPasetoAuth(w, r)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("Permission error.")))
+			_, err := w.Write([]byte("Permission error."))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -99,13 +106,24 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 func UserGet_impl(w http.ResponseWriter, r *http.Request) {
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("Permission error.")))
+		_, err = w.Write([]byte("Permission error."))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		return
 	}
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
-	w.Write([]byte(fmt.Sprintf(loginUser.Id)))
-	w.Write([]byte(fmt.Sprintf(loginUser.Name)))
-
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
