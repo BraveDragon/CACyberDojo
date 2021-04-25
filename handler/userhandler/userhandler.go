@@ -47,7 +47,7 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 func UserCreate(w http.ResponseWriter, r *http.Request) {
 	name, err := usercontroller.UserCreateImpl(r)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -56,7 +56,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
 	//w.Write()のエラーチェック
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -96,9 +96,9 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 		_, _, _, err := CheckPasetoAuth(w, r)
 		if err != nil {
 			_, err := w.Write([]byte("Permission error."))
-			log.Printf(err.Error())
+			log.Print(err.Error())
 			if err != nil {
-				log.Printf(err.Error())
+				log.Print(err.Error())
 				w.WriteHeader(http.StatusBadRequest)
 			}
 			w.WriteHeader(http.StatusForbidden)
@@ -115,24 +115,24 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_, err = w.Write([]byte("Permission error."))
 		if err != nil {
-			log.Printf(err.Error())
+			log.Print(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return
 	}
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }
@@ -141,7 +141,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	err := UserUpdateImpl(w, r)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -23,9 +23,9 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_, err = w.Write([]byte("Failed to draw gacha."))
 		//エラーが出たらエラーをlogに吐く
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		if err != nil {
-			log.Printf(err.Error())
+			log.Print(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return
