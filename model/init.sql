@@ -14,8 +14,9 @@ COLLATE='utf8mb4_0900_ai_ci'
 ENGINE=InnoDB;
 
 CREATE TABLE `characters` (
-	`id` INT UNSIGNED NOT NULL,
+	`id` BIGINT(20) UNSIGNED NOT NULL,
 	`name` CHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`strength` INT(10) UNSIGNED NOT NULL,
 	PRIMARY KEY (`id`) USING BTREE,
 	UNIQUE INDEX `name` (`name`) USING BTREE
 )

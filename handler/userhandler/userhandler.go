@@ -67,7 +67,7 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 
 	if bearerToken == "" {
 		//Authorizationヘッダーがない時はエラーを返す
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return "", paseto.JSONToken{}, "", commonErrors.NoAuthorizationheaderError()
 	}
 	tokenStr := bearerToken[7:]
