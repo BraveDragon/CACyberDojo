@@ -17,6 +17,7 @@ CREATE TABLE `characters` (
 	`id` BIGINT(20) UNSIGNED NOT NULL,
 	`name` CHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`strength` INT(10) UNSIGNED NOT NULL,
+	`rarity` INT(10) NOT NULL,
 	PRIMARY KEY (`id`) USING BTREE,
 	UNIQUE INDEX `name` (`name`) USING BTREE
 )

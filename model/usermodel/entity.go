@@ -9,5 +9,5 @@ type User struct {
 	MailAddress string             `db:"unique" column:"mailAddress" json:"mailAddress"` //メールアドレス
 	PassWord    string             `db:"unique" column:"passWord" json:"passWord"`       //パスワード
 	PrivateKey  ed25519.PrivateKey `db:"" column:"privateKey"`                           //認証トークンの秘密鍵
-
+	Score       int                `db:"" column:"score"`                                //ユーザーのスコア
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //トークン生成用の定数類
@@ -28,6 +29,18 @@ func UserCreateImpl(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	//パスワードをハッシュ化して格納
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(jsonUser.PassWord), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	jsonUser.PassWord = string(hashedPassword)
+	//パスワードをハッシュ化して格納
+	hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(jsonUser.MailAddress), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	jsonUser.MailAddress = string(hashedMailAddress)
 
 	//IDはUUIDで生成
 	UUID, _ := uuid.NewUUID()
