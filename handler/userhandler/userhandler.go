@@ -47,7 +47,7 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 func UserCreate(w http.ResponseWriter, r *http.Request) {
 	name, err := usercontroller.UserCreateImpl(r)
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
 	//全て終わればメッセージを出して終了
@@ -55,7 +55,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
 	//w.Write()のエラーチェック
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -110,7 +110,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	_, jsonToken, _, err := CheckPasetoAuth(w, r)
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 		_, err = w.Write([]byte("permission error"))
 		if err != nil {
 			log.Print(err.Error())
@@ -119,15 +119,15 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	}
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
 }
 
@@ -135,7 +135,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	err := UserUpdateImpl(w, r)
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
 

@@ -17,7 +17,7 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	Characters, err := ShowOwnCharactersImpl(w, r)
 
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		_, err := w.Write([]byte("failed to get your own characters"))
 		log.Print(err.Error())
 		return
@@ -26,7 +26,7 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	for _, character := range Characters {
 		_, err := w.Write([]byte(fmt.Sprintf(character.Name)))
 		if err != nil {
-			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
