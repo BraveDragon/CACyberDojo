@@ -57,7 +57,8 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	//JSONボディから必要なデータを取得
 	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		return
 	}
 	//ユーザー
 	user := usermodel.User{}
@@ -65,7 +66,8 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	err = usermodel.UserAuthorization(&user, jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
-		w.WriteHeader(http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
+		return
 	}
 	now := time.Now()
 	expiration := time.Now().Add(expirationTime)
@@ -83,7 +85,8 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		return
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",

@@ -4,6 +4,7 @@ import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/charactercontroller"
 	"CACyberDojo/controller/usercontroller"
+	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
 	"CACyberDojo/model/charactermodel"
 	"fmt"
@@ -16,17 +17,16 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 	Characters, err := ShowOwnCharactersImpl(w, r)
 
 	if err != nil {
-		_, err := w.Write([]byte("Failed to get your own characters."))
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		_, err := w.Write([]byte("failed to get your own characters"))
 		log.Print(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	for _, character := range Characters {
 		_, err := w.Write([]byte(fmt.Sprintf(character.Name)))
 		if err != nil {
-			log.Print(err.Error())
-			w.WriteHeader(http.StatusBadRequest)
+			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
 			return
 		}
 	}
