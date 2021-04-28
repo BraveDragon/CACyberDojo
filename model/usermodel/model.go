@@ -35,24 +35,23 @@ func GetOneUser(user *User, id string) error {
 }
 
 //UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
-func UserAuthorization(user *User, mailAddress string, password string) error {
+func UserAuthorization(mailAddress string, password string) (User, error) {
 	DBMap := model.NewDBMap(model.DB)
 	var DBusers []User
 	_, err := DBMap.Select(&DBusers, "SELECT * FROM users")
 	if err != nil {
-		return err
+		return User{}, err
 	}
 	for _, DBUser := range DBusers {
 		errPass := bcrypt.CompareHashAndPassword([]byte(DBUser.PassWord), []byte(password))
 		errAddress := bcrypt.CompareHashAndPassword([]byte(DBUser.MailAddress), []byte(mailAddress))
 		if errPass == nil && errAddress == nil {
-			//両方とも一致するものがDB内にあればそれをuserに詰めて返す。返り値はnilとする
-			user = &DBUser
-			return nil
+			//両方とも一致するものがDB内にあればそれを返す
+			return DBUser, nil
 		}
 	}
 	//見つからない場合はエラーを返す
-	return commonErrors.FailedToSearchError()
+	return User{}, commonErrors.FailedToSearchError()
 
 }
 

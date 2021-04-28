@@ -131,7 +131,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-	_, err = w.Write([]byte(fmt.Sprintf(strconv.Itoa(loginUser.Score))))
+	_, err = w.Write([]byte(fmt.Sprint(strconv.Itoa(loginUser.Score))))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
@@ -139,7 +139,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-	_, err = w.Write([]byte(fmt.Sprintf(strconv.Itoa(rank))))
+	_, err = w.Write([]byte(fmt.Sprint(strconv.Itoa(rank))))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}

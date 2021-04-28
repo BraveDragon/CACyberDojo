@@ -73,10 +73,9 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
 		return
 	}
-	//ユーザー
-	user := usermodel.User{}
+
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	err = usermodel.UserAuthorization(&user, jsonUser.MailAddress, jsonUser.PassWord)
+	user, err := usermodel.UserAuthorization(jsonUser.MailAddress, jsonUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
