@@ -121,3 +121,13 @@ func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 	return loginUser, nil
 
 }
+
+//GetUserRank : ユーザーのランキングを取得. 処理はusermodel.GetUserRank()に丸投げ.
+func GetUserRank(user usermodel.User) (int, error) {
+	return usermodel.GetUserRank(user)
+}
+
+//UpdateUser : ユーザー名を引数の内容に更新. 処理はusermodel.UpdateUser()に丸投げ
+func UpdateUser(user usermodel.User) error {
+	return usermodel.UpdateUser(user)
+}

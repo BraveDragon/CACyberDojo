@@ -76,3 +76,29 @@ func UpdateUser(user User) error {
 	return nil
 
 }
+
+//GetUserRank : ユーザーのランキングを取得.
+func GetUserRank(user User) (int, error) {
+	DBMap := model.NewDBMap(model.DB)
+	dbHandler, err := DBMap.Begin()
+	if err != nil {
+		return -1, err
+	}
+	var allUsers []User
+
+	_, err = dbHandler.Select(&allUsers, "SELECT * FROM users ORDER BY score DESC")
+	if err != nil {
+		return -1, err
+	}
+	var rank int
+	for i, allUser := range allUsers {
+		if user.Id == allUser.Id {
+			rank = i
+			break
+		}
+
+	}
+	//for文は0からカウントするため、ランキングとして表示するために1を足す
+	rank += 1
+	return rank, nil
+}

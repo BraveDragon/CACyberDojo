@@ -1,9 +1,10 @@
 CREATE TABLE `users` (
-	`ID` CHAR(64) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
-	`name` CHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`ID` CHAR(64) NOT NULL DEFAULT '' COLLATE 'utf8mb4_0900_ai_ci',
+	`name` CHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`privateKey` BLOB NOT NULL,
 	`mailAddress` CHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`password` CHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`score` INT(10) UNSIGNED NOT NULL DEFAULT '0',
 	PRIMARY KEY (`ID`) USING BTREE,
 	UNIQUE INDEX `password` (`password`) USING BTREE,
 	UNIQUE INDEX `mailAddress` (`mailAddress`) USING BTREE,

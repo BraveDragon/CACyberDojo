@@ -34,7 +34,7 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	loginUser.Name = jsonUser.Name
-	err = usermodel.UpdateUser(loginUser)
+	err = usercontroller.UpdateUser(loginUser)
 	if err != nil {
 		return err
 	}
@@ -122,8 +122,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-	//ユーザーID、ユーザー名、ユーザーのスコアを出力
-	//TODO: ユーザーのランキング機能を追加
+	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングを出力
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
@@ -133,6 +132,14 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(strconv.Itoa(loginUser.Score))))
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+	}
+	rank, err := usercontroller.GetUserRank(loginUser)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+	}
+	_, err = w.Write([]byte(fmt.Sprintf(strconv.Itoa(rank))))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
