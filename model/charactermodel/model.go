@@ -3,6 +3,8 @@ package charactermodel
 import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
+	"CACyberDojo/model/usermodel"
+	"CACyberDojo/usermodel"
 )
 
 //SearchCharacterById : キャラクターIDからキャラクターを返す.
@@ -40,11 +42,22 @@ func AddOwnCharacters(Userid string, characters []Character) error {
 	if err != nil {
 		return err
 	}
+	//ログインしているユーザーを取得
+	var loginUser usermodel.User
+	err = usermodel.GetOneUser(&loginUser, Userid)
+	if err != nil {
+		return err
+	}
 	for _, character := range characters {
 		err := dbhandler.Insert(OwnCharacter{UserId: Userid, CharacterId: character.Id})
 		if err != nil {
 			return err
 		}
+		//ユーザーにスコアを加点
+		//加点されるスコアはキャラクターの強さとなる
+		loginUser.Score += character.Strength
+		err = dbhandler.Insert(loginUser)
+
 	}
 	err = dbhandler.Commit()
 	if err != nil {
