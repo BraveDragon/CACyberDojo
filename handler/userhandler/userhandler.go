@@ -1,15 +1,15 @@
 package userhandler
 
 import (
-	"crypto/ed25519"
-	"fmt"
-	"log"
-	"net/http"
-
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
+	"crypto/ed25519"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
 
 	"github.com/o1egl/paseto"
 )
@@ -117,15 +117,22 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	//ログインしているユーザーを取得
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
+	//ユーザーID、ユーザー名、ユーザーのスコアを出力
+	//TODO: ユーザーのランキング機能を追加
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
 	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+	}
+	_, err = w.Write([]byte(fmt.Sprintf(strconv.Itoa(loginUser.Score))))
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}

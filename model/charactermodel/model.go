@@ -4,7 +4,6 @@ import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
 	"CACyberDojo/model/usermodel"
-	"CACyberDojo/usermodel"
 )
 
 //SearchCharacterById : キャラクターIDからキャラクターを返す.
