@@ -14,6 +14,7 @@ var DB *sql.DB
 func Init() error {
 	var err error
 	//sql.Open()の第2引数は環境に合わせて修正すること
+	//sql.Open()の第2引数の書式：ユーザー名:パスワード@/DB名
 	DB, err = sql.Open("mysql", "MineDragon:@/cacyberdojo")
 	if err != nil {
 		return err
