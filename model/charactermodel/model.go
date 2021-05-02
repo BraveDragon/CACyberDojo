@@ -54,11 +54,7 @@ func AddOwnCharacters(userid string, characters []Character) error {
 		}
 		//ユーザーにスコアを加点
 		//加点されるスコアはキャラクターの強さとなる
-		loginUser.Score += character.Strength
-		_, err = dbhandler.Update(loginUser)
-		if err != nil {
-			return err
-		}
+		usermodel.AddUserScore(loginUser, character.Strength)
 
 	}
 	err = dbhandler.Commit()

@@ -130,8 +130,3 @@ func GetUserRank(user usermodel.User) (int, error) {
 func UpdateUser(user usermodel.User) error {
 	return usermodel.UpdateUser(user)
 }
-
-//AddUserScore :
-func AddUserScore() {
-
-}

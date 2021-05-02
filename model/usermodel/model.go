@@ -101,3 +101,19 @@ func GetUserRank(user User) (int, error) {
 	rank += 1
 	return rank, nil
 }
+
+//AddUserScore : ユーザーのスコアを加算.
+func AddUserScore(user User, addScore int) error {
+	DBMap := model.NewDBMap(model.DB)
+	dbhandler, err := DBMap.Begin()
+	//ユーザーにスコアを加点
+	//加点されるスコアはキャラクターの強さとなる
+	user.Score += addScore
+	_, err = dbhandler.Update(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
