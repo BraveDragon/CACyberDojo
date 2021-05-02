@@ -59,7 +59,7 @@ func main() {
 	//所持キャラクターの一覧を表示
 	AuthorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8080", AuthorizationRouteCreator))
 	log.Fatal(http.ListenAndServe(":8080", OtherRouteCreator))
+	log.Fatal(http.ListenAndServe(":8080", AuthorizationRouteCreator))
 
 }

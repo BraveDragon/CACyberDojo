@@ -34,7 +34,7 @@ func GetOwnCharacterIDs(id string) ([]int, error) {
 }
 
 //AddOwnCharacters : 所持キャラクターを追加する.
-func AddOwnCharacters(Userid string, characters []Character) error {
+func AddOwnCharacters(userid string, characters []Character) error {
 
 	DBMap := model.NewDBMap(model.DB)
 	dbhandler, err := DBMap.Begin()
@@ -43,19 +43,19 @@ func AddOwnCharacters(Userid string, characters []Character) error {
 	}
 	//ログインしているユーザーを取得
 	var loginUser usermodel.User
-	err = usermodel.GetOneUser(&loginUser, Userid)
+	err = usermodel.GetOneUser(&loginUser, userid)
 	if err != nil {
 		return err
 	}
 	for _, character := range characters {
-		err := dbhandler.Insert(OwnCharacter{UserId: Userid, CharacterId: character.Id})
+		err := dbhandler.Insert(OwnCharacter{UserId: userid, CharacterId: character.Id})
 		if err != nil {
 			return err
 		}
 		//ユーザーにスコアを加点
 		//加点されるスコアはキャラクターの強さとなる
 		loginUser.Score += character.Strength
-		err = dbhandler.Insert(loginUser)
+		_, err = dbhandler.Update(loginUser)
 		if err != nil {
 			return err
 		}
