@@ -8,9 +8,9 @@ import (
 
 //SearchCharacterById : キャラクターIDからキャラクターを返す.
 func SearchCharacterById(characterId int) (Character, error) {
-	DBMap := model.NewDBMap(model.DB)
+	dbMap := model.NewDBMap(model.DB)
 	result := Character{}
-	err := DBMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", characterId)
+	err := dbMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", characterId)
 	if err != nil {
 		return Character{}, commonErrors.FailedToSearchError()
 	}
@@ -20,8 +20,8 @@ func SearchCharacterById(characterId int) (Character, error) {
 //GetOwnCharacterIDs : ユーザーIDから所有するキャラクターのキャラクターIDを全て取得.
 func GetOwnCharacterIDs(id string) ([]int, error) {
 	ownCharacters := []OwnCharacter{}
-	DBMap := model.NewDBMap(model.DB)
-	_, err := DBMap.Select(&ownCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", id)
+	dbMap := model.NewDBMap(model.DB)
+	_, err := dbMap.Select(&ownCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", id)
 	if err != nil {
 		return []int{-1}, commonErrors.FailedToSearchError()
 	}
@@ -36,8 +36,8 @@ func GetOwnCharacterIDs(id string) ([]int, error) {
 //AddOwnCharacters : 所持キャラクターを追加する.
 func AddOwnCharacters(userid string, characters []Character) error {
 
-	DBMap := model.NewDBMap(model.DB)
-	dbhandler, err := DBMap.Begin()
+	dbMap := model.NewDBMap(model.DB)
+	dbhandler, err := dbMap.Begin()
 	if err != nil {
 		return err
 	}
@@ -52,9 +52,6 @@ func AddOwnCharacters(userid string, characters []Character) error {
 		if err != nil {
 			return err
 		}
-		//ユーザーにスコアを加点
-		//加点されるスコアはキャラクターの強さとなる
-		usermodel.AddUserScore(loginUser, character.Strength)
 
 	}
 	err = dbhandler.Commit()

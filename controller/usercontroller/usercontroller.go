@@ -126,7 +126,12 @@ func GetUserRank(user usermodel.User) (int, error) {
 	return usermodel.GetUserRank(user)
 }
 
-//UpdateUser : ユーザー名を引数の内容に更新. 処理はusermodel.UpdateUser()に丸投げ
+//UpdateUser : ユーザー名を引数の内容に更新. 処理はusermodel.UpdateUser()に丸投げ.
 func UpdateUser(user usermodel.User) error {
 	return usermodel.UpdateUser(user)
+}
+
+//AddUserScore : ユーザーのスコアを加算. 処理はusermodel.AddUserScore()に丸投げ.
+func AddUserScore(user usermodel.User, addScore int) error {
+	return usermodel.AddUserScore(user, addScore)
 }

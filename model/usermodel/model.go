@@ -9,8 +9,8 @@ import (
 
 //CreateUser : ユーザーを新規作成してDBに追加.
 func CreateUser(user User) error {
-	DBMap := model.NewDBMap(model.DB)
-	dbHandler, err := DBMap.Begin()
+	dbMap := model.NewDBMap(model.DB)
+	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return err
 	}
@@ -30,15 +30,15 @@ func CreateUser(user User) error {
 
 //GetOneUser : IDからユーザーを取得.
 func GetOneUser(user *User, id string) error {
-	DBMap := model.NewDBMap(model.DB)
-	return DBMap.SelectOne(&user, "SELECT * FROM user WHERE ID = ?", id)
+	dbMap := model.NewDBMap(model.DB)
+	return dbMap.SelectOne(&user, "SELECT * FROM user WHERE ID = ?", id)
 }
 
 //UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
 func UserAuthorization(mailAddress string, password string) (User, error) {
-	DBMap := model.NewDBMap(model.DB)
+	dbMap := model.NewDBMap(model.DB)
 	var DBusers []User
-	_, err := DBMap.Select(&DBusers, "SELECT * FROM users")
+	_, err := dbMap.Select(&DBusers, "SELECT * FROM users")
 	if err != nil {
 		return User{}, err
 	}
@@ -57,8 +57,8 @@ func UserAuthorization(mailAddress string, password string) (User, error) {
 
 //UpdateUser : ユーザー名を引数の内容に更新
 func UpdateUser(user User) error {
-	DBMap := model.NewDBMap(model.DB)
-	dbHandler, err := DBMap.Begin()
+	dbMap := model.NewDBMap(model.DB)
+	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return err
 	}
@@ -78,8 +78,8 @@ func UpdateUser(user User) error {
 
 //GetUserRank : ユーザーのランキングを取得.
 func GetUserRank(user User) (int, error) {
-	DBMap := model.NewDBMap(model.DB)
-	dbHandler, err := DBMap.Begin()
+	dbMap := model.NewDBMap(model.DB)
+	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return -1, err
 	}
@@ -104,8 +104,8 @@ func GetUserRank(user User) (int, error) {
 
 //AddUserScore : ユーザーのスコアを加算.
 func AddUserScore(user User, addScore int) error {
-	DBMap := model.NewDBMap(model.DB)
-	dbhandler, err := DBMap.Begin()
+	dbMap := model.NewDBMap(model.DB)
+	dbhandler, err := dbMap.Begin()
 	//ユーザーにスコアを加点
 	//加点されるスコアはキャラクターの強さとなる
 	user.Score += addScore
@@ -113,6 +113,8 @@ func AddUserScore(user User, addScore int) error {
 	if err != nil {
 		return err
 	}
+
+	dbhandler.Commit()
 
 	return nil
 

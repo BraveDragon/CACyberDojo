@@ -7,6 +7,7 @@ import (
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
+	"CACyberDojo/model/usermodel"
 	"log"
 	"net/http"
 )
@@ -59,6 +60,12 @@ func GachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
+	//ユーザーのスコアを加算
+	for _, result := range results {
+		usermodel.AddUserScore(loginUser, result.Strength)
+	}
+
 	return nil
 
 }
