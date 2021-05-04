@@ -25,7 +25,6 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	loginUser, err := usercontroller.GetOneUser(jsonToken)
 	if err != nil {
 		return err
-
 	}
 	jsonUser := usermodel.User{}
 	//jsonボディからメールアドレスとパスワードを取得

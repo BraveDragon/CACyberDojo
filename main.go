@@ -23,43 +23,39 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	router := mux.NewRouter()
+	router.Schemes("http")
 	//ユーザー認証をする処理用のルーター
-	AuthorizationRouteCreator := mux.NewRouter()
+	authorizationRouteCreator := router.Host("https://7e3a17d4835e.ngrok.io").Subrouter()
+	authorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 	//ユーザー認証をしない処理用のルーター
-	OtherRouteCreator := mux.NewRouter()
+	otherRouteCreator := router.Host("https://7e3a17d4835e.ngrok.io").Subrouter()
+
 	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
-	AuthorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
-	AuthorizationRouteCreator.Use(middleware.RefreshMiddleware)
+	authorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
+	authorizationRouteCreator.Use(middleware.RefreshMiddleware)
 	//CORS対応もミドルウェアで行う
-	AuthorizationRouteCreator.Use(middleware.EnableCorsMiddleware)
+	authorizationRouteCreator.Use(middleware.EnableCorsMiddleware)
 
-	AuthorizationRouteCreator.Host("https://localhost:8080")
-	AuthorizationRouteCreator.PathPrefix("https")
-	AuthorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 	//CORS対応もミドルウェアで行う
-	OtherRouteCreator.Use(middleware.EnableCorsMiddleware)
-
-	OtherRouteCreator.Host("https://localhost:8080")
-	OtherRouteCreator.PathPrefix("https")
-	OtherRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
+	otherRouteCreator.Use(middleware.EnableCorsMiddleware)
 
 	//エンドポイントを用意
 	//ユーザー作成
-	OtherRouteCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
+	otherRouteCreator.HandleFunc("/user/create", userhandler.UserCreate).Methods("POST")
 
 	//ユーザー情報取得
-	AuthorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGetImpl)).Methods("GET")
+	authorizationRouteCreator.HandleFunc("/user/get", userhandler.UserGet(userhandler.UserGetImpl)).Methods("GET")
 
 	//ユーザー情報更新
-	AuthorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
+	authorizationRouteCreator.HandleFunc("/user/update", userhandler.UserUpdate).Methods("PUT")
 
 	//ガチャを引く
-	AuthorizationRouteCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
+	authorizationRouteCreator.HandleFunc("/gacha/draw", gachahandler.GachaDrawHandler).Methods("POST")
 
 	//所持キャラクターの一覧を表示
-	AuthorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
+	authorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8080", OtherRouteCreator))
-	log.Fatal(http.ListenAndServe(":8080", AuthorizationRouteCreator))
+	log.Fatal(http.ListenAndServe(":8080", router))
 
 }
