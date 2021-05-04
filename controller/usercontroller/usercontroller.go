@@ -21,7 +21,7 @@ const footer = "FOOTER"
 //トークンの有効期限
 const expirationTime = 30 * time.Minute
 
-//UserCreateImpl : userhandler.UserGet()の処理の本体.ユーザー情報取得を行う.
+//UserCreateImpl : userhandler.UserCreate()の処理の本体.ユーザー情報取得を行う.
 func UserCreateImpl(r *http.Request) (string, error) {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
@@ -35,7 +35,7 @@ func UserCreateImpl(r *http.Request) (string, error) {
 		return "", err
 	}
 	jsonUser.PassWord = string(hashedPassword)
-	//パスワードをハッシュ化して格納
+	//メールアドレスをハッシュ化して格納
 	hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(jsonUser.MailAddress), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
