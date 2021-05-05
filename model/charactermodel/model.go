@@ -9,6 +9,8 @@ import (
 //SearchCharacterById : キャラクターIDからキャラクターを返す.
 func SearchCharacterById(characterId int) (Character, error) {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(Character{}, "characters")
 	result := Character{}
 	err := dbMap.SelectOne(&result, "SELECT * FROM characters WHERE id=?", characterId)
 	if err != nil {
@@ -21,6 +23,8 @@ func SearchCharacterById(characterId int) (Character, error) {
 func GetOwnCharacterIDs(id string) ([]int, error) {
 	ownCharacters := []OwnCharacter{}
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(OwnCharacter{}, "owncharacters")
 	_, err := dbMap.Select(&ownCharacters, "SELECT characterId FROM owncharacters WHERE userId=?", id)
 	if err != nil {
 		return []int{-1}, commonErrors.FailedToSearchError()
@@ -37,6 +41,8 @@ func GetOwnCharacterIDs(id string) ([]int, error) {
 func AddOwnCharacters(userid string, characters []Character) error {
 
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(OwnCharacter{}, "owncharacters")
 	dbhandler, err := dbMap.Begin()
 	if err != nil {
 		return err
@@ -48,7 +54,7 @@ func AddOwnCharacters(userid string, characters []Character) error {
 		return err
 	}
 	for _, character := range characters {
-		err := dbhandler.Insert(OwnCharacter{UserId: userid, CharacterId: character.Id})
+		err := dbhandler.Insert(&OwnCharacter{UserId: userid, CharacterId: character.Id})
 		if err != nil {
 			return err
 		}

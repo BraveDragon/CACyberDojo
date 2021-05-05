@@ -10,12 +10,14 @@ import (
 //CreateUser : ユーザーを新規作成してDBに追加.
 func CreateUser(user User) error {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return err
 	}
 	//DBに追加＋反映
-	err = dbHandler.Insert(user)
+	err = dbHandler.Insert(&user)
 	if err != nil {
 		return err
 	}
@@ -62,7 +64,7 @@ func UpdateUser(user User) error {
 	if err != nil {
 		return err
 	}
-	_, err = dbHandler.Update(user)
+	_, err = dbHandler.Update(&user)
 
 	if err != nil {
 		return err
@@ -109,7 +111,7 @@ func AddUserScore(user User, addScore int) error {
 	//ユーザーにスコアを加点
 	//加点されるスコアはキャラクターの強さとなる
 	user.Score += addScore
-	_, err = dbhandler.Update(user)
+	_, err = dbhandler.Update(&user)
 	if err != nil {
 		return err
 	}

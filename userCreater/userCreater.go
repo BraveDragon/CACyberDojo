@@ -25,6 +25,7 @@ var DB *sql.DB
 func main() {
 	DB, err := sql.Open("mysql", "MineDragon:@/cacyberdojo")
 	dbMap := &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
+	//DBのテーブルと構造体を結びつける
 	dbMap.AddTableWithName(usermodel.User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {

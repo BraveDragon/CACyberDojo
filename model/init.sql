@@ -1,7 +1,7 @@
 CREATE TABLE `users` (
-	`ID` CHAR(128) NOT NULL DEFAULT '' COLLATE 'utf8mb4_0900_ai_ci',
+	`ID` VARCHAR(256) NOT NULL DEFAULT '0' COLLATE 'utf8mb4_0900_ai_ci',
 	`name` CHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-	`privateKey` BLOB NULL DEFAULT NULL,
+	`privateKey` BLOB NOT NULL,
 	`mailAddress` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`password` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`score` INT(10) UNSIGNED NOT NULL DEFAULT '0',
@@ -25,8 +25,8 @@ COLLATE='utf8mb4_0900_ai_ci'
 ENGINE=InnoDB;
 
 CREATE TABLE `owncharacters` (
-	`userId` CHAR(64) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
-	`characterId` INT NOT NULL
+	`userId` VARCHAR(256) NOT NULL DEFAULT '0' COLLATE 'utf8mb4_0900_ai_ci',
+	`characterId` INT(10) NOT NULL
 )
 COMMENT='ユーザーが保持するキャラクターを管理'
 COLLATE='utf8mb4_0900_ai_ci'
