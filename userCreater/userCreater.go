@@ -24,9 +24,11 @@ var DB *sql.DB
 //ID・ハッシュ化したメールアドレス・ハッシュ化したパスワード、秘密鍵を自動生成
 func main() {
 	DB, err := sql.Open("mysql", "MineDragon:@/cacyberdojo")
-	dbMap := gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
+	dbMap := &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
+	dbMap.AddTableWithName(usermodel.User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {
+		fmt.Println("Error occurred when connecting to MySQL.")
 		log.Fatal(err)
 	}
 
@@ -58,7 +60,8 @@ func main() {
 	fmt.Println("ID : " + id)
 	fmt.Println("mailAddress : " + string(hashedMailAddress))
 	fmt.Println("passWord : " + string(hashedPassword))
-	err = dbHandler.Insert(usermodel.User{
+
+	err = dbHandler.Insert(&usermodel.User{
 		Id:          id,
 		Name:        "A",
 		PassWord:    string(hashedPassword),
