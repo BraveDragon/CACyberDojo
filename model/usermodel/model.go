@@ -33,12 +33,16 @@ func CreateUser(user User) error {
 //GetOneUser : IDからユーザーを取得.
 func GetOneUser(user *User, id string) error {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	return dbMap.SelectOne(&user, "SELECT * FROM user WHERE ID = ?", id)
 }
 
 //UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
 func UserAuthorization(mailAddress string, password string) (User, error) {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	var DBusers []User
 	_, err := dbMap.Select(&DBusers, "SELECT * FROM users")
 	if err != nil {
@@ -60,6 +64,8 @@ func UserAuthorization(mailAddress string, password string) (User, error) {
 //UpdateUser : ユーザー名を引数の内容に更新
 func UpdateUser(user User) error {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return err
@@ -81,6 +87,8 @@ func UpdateUser(user User) error {
 //GetUserRank : ユーザーのランキングを取得.
 func GetUserRank(user User) (int, error) {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {
 		return -1, err
@@ -107,6 +115,8 @@ func GetUserRank(user User) (int, error) {
 //AddUserScore : ユーザーのスコアを加算.
 func AddUserScore(user User, addScore int) error {
 	dbMap := model.NewDBMap(model.DB)
+	//DBと構造体を結びつける
+	dbMap.AddTableWithName(User{}, "users")
 	dbhandler, err := dbMap.Begin()
 	if err != nil {
 		return err
