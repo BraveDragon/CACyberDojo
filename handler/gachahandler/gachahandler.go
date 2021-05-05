@@ -62,7 +62,10 @@ func GachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 
 	//ユーザーのスコアを加算
 	for _, result := range results {
-		usercontroller.AddUserScore(loginUser, result.Strength)
+		err := usercontroller.AddUserScore(loginUser, result.Strength)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -19,17 +19,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var DB *sql.DB
-
 //ID・ハッシュ化したメールアドレス・ハッシュ化したパスワード、秘密鍵を自動生成してDBに格納
 func main() {
 	DB, err := sql.Open("mysql", "MineDragon:@/cacyberdojo")
+	if err != nil {
+		fmt.Println("Error occurred when connecting to MySQL.")
+		log.Fatal(err)
+	}
 	dbMap := &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
 	//DBのテーブルと構造体を結びつける
 	dbMap.AddTableWithName(usermodel.User{}, "users")
 	dbHandler, err := dbMap.Begin()
 	if err != nil {
-		fmt.Println("Error occurred when connecting to MySQL.")
+		fmt.Println("Error occurred when creating DBMap.")
 		log.Fatal(err)
 	}
 
