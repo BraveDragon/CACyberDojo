@@ -21,7 +21,7 @@ import (
 
 var DB *sql.DB
 
-//ID・ハッシュ化したメールアドレス・ハッシュ化したパスワード、秘密鍵を自動生成
+//ID・ハッシュ化したメールアドレス・ハッシュ化したパスワード、秘密鍵を自動生成してDBに格納
 func main() {
 	DB, err := sql.Open("mysql", "MineDragon:@/cacyberdojo")
 	dbMap := &gorp.DbMap{Db: DB, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
@@ -39,6 +39,10 @@ func main() {
 	privateKey := ed25519.PrivateKey(b)
 
 	scanner := bufio.NewScanner(os.Stdin)
+	var name string
+	if scanner.Scan() {
+		name = scanner.Text()
+	}
 	var mailAddress string
 	if scanner.Scan() {
 		mailAddress = scanner.Text()
@@ -58,12 +62,13 @@ func main() {
 	}
 
 	fmt.Println("ID : " + id)
+	fmt.Println("name : " + string(name))
 	fmt.Println("mailAddress : " + string(hashedMailAddress))
 	fmt.Println("passWord : " + string(hashedPassword))
 
 	err = dbHandler.Insert(&usermodel.User{
 		Id:          id,
-		Name:        "A",
+		Name:        name,
 		PassWord:    string(hashedPassword),
 		MailAddress: string(hashedMailAddress),
 		PrivateKey:  privateKey,
