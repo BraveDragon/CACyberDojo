@@ -26,10 +26,11 @@ func main() {
 	router := mux.NewRouter()
 	router.Schemes("http")
 	//ユーザー認証をする処理用のルーター
-	authorizationRouteCreator := router.Host("https://7e3a17d4835e.ngrok.io").Subrouter()
+	authorizationRouteCreator := router.Host("localhost:8080").Subrouter()
 	authorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 	//ユーザー認証をしない処理用のルーター
-	otherRouteCreator := router.Host("https://7e3a17d4835e.ngrok.io").Subrouter()
+	otherRouteCreator := router.Host("localhost:8080").Subrouter()
+	otherRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
 
 	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
 	authorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
