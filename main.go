@@ -27,9 +27,7 @@ func main() {
 
 	//ユーザー認証をする処理用のルーター
 	authorizationRouteCreator := router.PathPrefix("").Subrouter()
-	// router.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-	// 	rw.Write([]byte("Hello"))
-	// }).Methods("GET")
+
 	//ユーザー認証をしない処理用のルーター
 	otherRouteCreator := router.PathPrefix("").Subrouter()
 
