@@ -24,13 +24,14 @@ func main() {
 		log.Fatal(err)
 	}
 	router := mux.NewRouter()
-	router.Schemes("http")
+
 	//ユーザー認証をする処理用のルーター
-	authorizationRouteCreator := router.Host("localhost:8080").Subrouter()
-	authorizationRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
+	authorizationRouteCreator := router.PathPrefix("").Subrouter()
+	// router.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+	// 	rw.Write([]byte("Hello"))
+	// }).Methods("GET")
 	//ユーザー認証をしない処理用のルーター
-	otherRouteCreator := router.Host("localhost:8080").Subrouter()
-	otherRouteCreator.Headers("X-Requested-With", "XMLHttpRequest")
+	otherRouteCreator := router.PathPrefix("").Subrouter()
 
 	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
 	authorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
@@ -56,7 +57,11 @@ func main() {
 
 	//所持キャラクターの一覧を表示
 	authorizationRouteCreator.HandleFunc("/character/list", characterhandler.ShowOwnCharacters).Methods("GET")
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	//サーバーを起動
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+	log.Fatal(srv.ListenAndServe())
 
 }
