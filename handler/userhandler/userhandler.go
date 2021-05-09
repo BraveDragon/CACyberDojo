@@ -48,14 +48,15 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 
 //UserCreate : ユーザー作成する.
 func UserCreate(w http.ResponseWriter, r *http.Request) {
-	name, err := userCreateImpl(r)
+	token, err := userCreateImpl(r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
 	//全て終わればメッセージを出して終了
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte(fmt.Sprintf("User %s created", name)))
+	//TODO:トークンをjson形式で返す
+	_, err = w.Write([]byte(fmt.Sprintf(token)))
 	//w.Write()のエラーチェック
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
@@ -93,17 +94,30 @@ func userCreateImpl(r *http.Request) (string, error) {
 	//ここから認証トークン生成部
 	//認証トークンの生成方法は以下のサイトを参考にしている
 	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
-	//ユーザーIDから秘密鍵生成用のシードを生成
-	b, _ := hex.DecodeString(id)
+	//秘密鍵生成用のシード(128桁)
+	//TODO: 文字列を途中で折り返す方法を見つける
+	const secretKey = "276538ba123456091749759837598027127498375957987902740982774983748a276538ba12345609174975983759802712749837595798790274098273748a"
+
+	b, err := hex.DecodeString(secretKey)
+	if err != nil {
+		return "", err
+	}
+	//TODO: len(privateKey)が64にならない問題を解決する
 	privateKey := ed25519.PrivateKey(b)
+
 	jsonUser.PrivateKey = privateKey
 
 	err = usermodel.CreateUser(jsonUser)
 	if err != nil {
 		return "", err
 	}
+	//トークンを生成して返す
+	token, err := CreateToken(jsonUser)
+	if err != nil {
+		return "", err
+	}
 
-	return jsonUser.Name, nil
+	return token, nil
 
 }
 
@@ -201,21 +215,14 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//トークン生成用の定数類
-//フッター
-const footer = "FOOTER"
-
-//トークンの有効期限
-const expirationTime = 30 * time.Minute
-
 //UserSignIn : ユーザーのサインイン処理を行う.
-func UserSignIn(w http.ResponseWriter, r *http.Request) {
+func UserSignIn(w http.ResponseWriter, r *http.Request) string {
 	jsonUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
 	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
-		return
+		return ""
 	}
 
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
@@ -223,8 +230,29 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
-		return
+		return ""
 	}
+
+	//トークンを生成
+	token, err := CreateToken(user)
+
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		return ""
+	}
+	return token
+
+}
+
+//トークン生成用の定数類
+//フッター
+const footer = "FOOTER"
+
+//トークンの有効期限
+const expirationTime = 30 * time.Minute
+
+//CreateToken : トークンを生成する.
+func CreateToken(user usermodel.User) (string, error) {
 	now := time.Now()
 	expiration := time.Now().Add(expirationTime)
 	jsonToken := paseto.JSONToken{
@@ -232,22 +260,10 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) {
 		IssuedAt:   now,        // 発行日時
 		NotBefore:  now,        // 有効化日時
 	}
-
-	jsonToken.Set("ID", user.Id)
+	jsonToken.Set("id", user.Id)
 
 	tokenCreator := paseto.NewV2()
-
 	//トークンを生成
 	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
-
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: expiration,
-	})
-
+	return token, err
 }
