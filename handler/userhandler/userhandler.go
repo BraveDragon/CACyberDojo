@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/o1egl/paseto"
 )
@@ -151,5 +152,56 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
+
+}
+
+//トークン生成用の定数類
+//フッター
+const footer = "FOOTER"
+
+//トークンの有効期限
+const expirationTime = 30 * time.Minute
+
+//UserSignIn : ユーザーのサインイン処理を行う.
+func UserSignIn(w http.ResponseWriter, r *http.Request) {
+	jsonUser := usermodel.User{}
+	//JSONボディから必要なデータを取得
+	err := handlerutil.ParseJsonBody(r, &jsonUser)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		return
+	}
+
+	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
+	user, err := usercontroller.UserAuthorization(jsonUser.MailAddress, jsonUser.PassWord)
+	if err != nil {
+		//メールアドレスとパスワードの組がDBになければエラーを返す
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
+		return
+	}
+	now := time.Now()
+	expiration := time.Now().Add(expirationTime)
+	jsonToken := paseto.JSONToken{
+		Expiration: expiration, // 失効日時
+		IssuedAt:   now,        // 発行日時
+		NotBefore:  now,        // 有効化日時
+	}
+
+	jsonToken.Set("ID", user.Id)
+
+	tokenCreator := paseto.NewV2()
+
+	//トークンを生成
+	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
+
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: expiration,
+	})
 
 }

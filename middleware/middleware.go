@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 func AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			usercontroller.UserSignIn(w, r)
+			userhandler.UserSignIn(w, r)
 			next.ServeHTTP(w, r)
 		})
 }
@@ -35,7 +34,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 
 			} else {
 				//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
-				usercontroller.UserSignIn(w, r)
+				userhandler.UserSignIn(w, r)
 				w.WriteHeader(http.StatusOK)
 
 			}

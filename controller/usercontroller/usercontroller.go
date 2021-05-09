@@ -7,19 +7,11 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
 	"golang.org/x/crypto/bcrypt"
 )
-
-//トークン生成用の定数類
-//フッター
-const footer = "FOOTER"
-
-//トークンの有効期限
-const expirationTime = 30 * time.Minute
 
 //UserCreateImpl : userhandler.UserCreate()の処理の本体.ユーザー情報取得を行う.
 func UserCreateImpl(r *http.Request) (string, error) {
@@ -64,50 +56,6 @@ func UserCreateImpl(r *http.Request) (string, error) {
 
 }
 
-//UserSignIn : ユーザーのサインイン処理を行う.
-func UserSignIn(w http.ResponseWriter, r *http.Request) {
-	jsonUser := usermodel.User{}
-	//JSONボディから必要なデータを取得
-	err := handlerutil.ParseJsonBody(r, &jsonUser)
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
-		return
-	}
-
-	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	user, err := usermodel.UserAuthorization(jsonUser.MailAddress, jsonUser.PassWord)
-	if err != nil {
-		//メールアドレスとパスワードの組がDBになければエラーを返す
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
-		return
-	}
-	now := time.Now()
-	expiration := time.Now().Add(expirationTime)
-	jsonToken := paseto.JSONToken{
-		Expiration: expiration, // 失効日時
-		IssuedAt:   now,        // 発行日時
-		NotBefore:  now,        // 有効化日時
-	}
-
-	jsonToken.Set("ID", user.Id)
-
-	tokenCreator := paseto.NewV2()
-
-	//トークンを生成
-	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
-
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: expiration,
-	})
-
-}
-
 //GetOneUser : jsonTokenからユーザーを取得.
 func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
 	id := jsonToken.Get("ID")
@@ -134,4 +82,9 @@ func UpdateUser(user usermodel.User) error {
 //AddUserScore : ユーザーのスコアを加算. 処理はusermodel.AddUserScore()に丸投げ.
 func AddUserScore(user usermodel.User, addScore int) error {
 	return usermodel.AddUserScore(user, addScore)
+}
+
+//UserAuthorization : ユーザー認証を行う.処理はusermodel.UserAuthorization()に丸投げ.
+func UserAuthorization(mailAddress string, password string) (usermodel.User, error) {
+	return usermodel.UserAuthorization(mailAddress, password)
 }
