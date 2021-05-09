@@ -6,13 +6,16 @@ import (
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
@@ -45,7 +48,7 @@ func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 
 //UserCreate : ユーザー作成する.
 func UserCreate(w http.ResponseWriter, r *http.Request) {
-	name, err := usercontroller.UserCreateImpl(r)
+	name, err := userCreateImpl(r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
@@ -58,6 +61,49 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
+
+}
+
+//UserCreateImpl : userhandler.UserCreate()の処理の本体.ユーザー情報取得を行う.
+func userCreateImpl(r *http.Request) (string, error) {
+	jsonUser := usermodel.User{}
+	//JSONボディから必要なデータを取得
+	err := handlerutil.ParseJsonBody(r, &jsonUser)
+	if err != nil {
+		return "", err
+	}
+	//パスワードをハッシュ化して格納
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(jsonUser.PassWord), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	jsonUser.PassWord = string(hashedPassword)
+	//メールアドレスをハッシュ化して格納
+	hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(jsonUser.MailAddress), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	jsonUser.MailAddress = string(hashedMailAddress)
+
+	//IDはUUIDで生成
+	UUID, _ := uuid.NewUUID()
+	id := UUID.String()
+	jsonUser.Id = id
+
+	//ここから認証トークン生成部
+	//認証トークンの生成方法は以下のサイトを参考にしている
+	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
+	//ユーザーIDから秘密鍵生成用のシードを生成
+	b, _ := hex.DecodeString(id)
+	privateKey := ed25519.PrivateKey(b)
+	jsonUser.PrivateKey = privateKey
+
+	err = usermodel.CreateUser(jsonUser)
+	if err != nil {
+		return "", err
+	}
+
+	return jsonUser.Name, nil
 
 }
 
