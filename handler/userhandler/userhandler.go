@@ -7,6 +7,7 @@ import (
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -59,7 +60,12 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//トークンをjson形式で返す
-	_, err = w.Write([]byte("{\n" + "\"" + "token\": " + "\"" + token + "\"" + "\n}"))
+	type result struct {
+		Token string `json:"token"`
+	}
+	rawResult := result{Token: token}
+	resResult, err := json.Marshal(rawResult)
+	_, err = w.Write(resResult)
 	//w.Write()のエラーチェック
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
@@ -202,13 +208,16 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-
+	type result struct {
+		Id    string `json:"id"`
+		Name  string `json:"name"`
+		Score string `json:"score"`
+		Rank  string `json:"rank"`
+	}
+	rawResult := result{Id: loginUser.Id, Name: loginUser.Name, Score: strconv.Itoa(loginUser.Score), Rank: strconv.Itoa(rank)}
+	resResult, err := json.Marshal(rawResult)
 	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングをjson形式で出力
-	_, err = w.Write([]byte("{\n" +
-		"\"id\": \"" + loginUser.Id + "\"" +
-		"\"name\": \"" + loginUser.Name + "\"" +
-		"\"score\": \"" + strconv.Itoa(loginUser.Score) + "\"" +
-		"\"rank\": \"" + strconv.Itoa(rank) + "\"" + "\n}"))
+	_, err = w.Write(resResult)
 
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)

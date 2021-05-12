@@ -7,7 +7,7 @@ import (
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
 	"CACyberDojo/model/charactermodel"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -22,14 +22,16 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 		log.Print(err.Error())
 		return
 	}
-
-	for _, character := range Characters {
-		_, err := w.Write([]byte(fmt.Sprintf(character.Name)))
-		if err != nil {
-			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-			return
-		}
+	type result struct {
+		Characters []charactermodel.Character `json:"characters"`
 	}
+	rawResult := result{Characters: Characters}
+	resResult, err := json.Marshal(rawResult)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.Write(resResult)
 
 }
 

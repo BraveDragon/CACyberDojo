@@ -7,6 +7,8 @@ import (
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
+	"CACyberDojo/model/charactermodel"
+	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -19,7 +21,7 @@ type GachaRequest struct {
 
 //GachaDrawHandler : ガチャ処理のハンドラ.処理本体はGachaDrawHandlerImpl()に丸投げ.
 func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
-	err := GachaDrawHandlerImpl(w, r)
+	err := gachaDrawHandlerImpl(w, r)
 	if err != nil {
 		_, err = w.Write([]byte("Failed to draw gacha."))
 		//エラーが出たらエラーをlogに吐く
@@ -32,7 +34,7 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //GachaDrawHandlerImpl : GachaDrawHandler()の処理の本体.
-func GachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
+func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//ユーザーを取得するためにjsonTokenを取得
 	id, _, _, err := userhandler.CheckJsonBody(r)
 	if err != nil {
@@ -67,7 +69,15 @@ func GachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 	}
-
+	type result struct {
+		Results []charactermodel.Character `json:"results"`
+	}
+	resResult := result{Results: results}
+	res, err := json.Marshal(resResult)
+	if err != nil {
+		return err
+	}
+	w.Write(res)
 	return nil
 
 }
