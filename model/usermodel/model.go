@@ -2,6 +2,7 @@ package usermodel
 
 import (
 	"CACyberDojo/model"
+	"log"
 )
 
 //CreateUser : ユーザーを新規作成してDBに追加.
@@ -41,7 +42,9 @@ func UserAuthorization(mailAddress string, password string) (User, error) {
 	//DBと構造体を結びつける
 	dbMap.AddTableWithName(User{}, "users")
 	var dbUser User
-	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE mailAddress = ? AND password = ?", mailAddress, password)
+	//TODO: SQLの条件指定が正しくできるようにする
+	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE mailAddress=? AND password=?", mailAddress, password)
+	log.Println(dbUser)
 	if err != nil {
 		return User{}, err
 	}
