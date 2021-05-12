@@ -55,8 +55,13 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	//全て終わればメッセージを出して終了
 	w.WriteHeader(http.StatusOK)
-	//TODO:トークンをjson形式で返す
-	_, err = w.Write([]byte(fmt.Sprintf(token)))
+
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
+	}
+	//トークンをjson形式で返す
+	_, err = w.Write([]byte("{\n" + "token: " + "\"" + token + "\"" + "\n}"))
 	//w.Write()のエラーチェック
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
