@@ -21,7 +21,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// トークンの検証(有効かどうか)
-			_, jsonToken, _, _, err := userhandler.CheckPasetoAuth(w, r)
+			_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 			if err != nil {
 				//トークンが無効ならエラーを返す
 				handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)

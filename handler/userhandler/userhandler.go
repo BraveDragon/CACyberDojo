@@ -17,13 +17,13 @@ import (
 )
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
-func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
+func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	// 誰がログインしているかをチェック
-	_, _, _, id, err := CheckPasetoAuth(w, r)
+	id, _, _, err := CheckJsonBody(r)
 	if err != nil {
 		return commonErrors.FailedToAuthorizationError()
 	}
-	//トークンから主キーのユーザーIDを取得
+	//ユーザーを取得
 	loginUser, err := usercontroller.GetOneUser(id)
 	if err != nil {
 		return err
@@ -126,30 +126,36 @@ func userCreateImpl(r *http.Request) (string, error) {
 }
 
 //CheckPasetoAuth : トークンの検証.
-func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, string, error) {
+func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
 
-	type request struct {
-		Id          string `json:"id"`
-		MailAddress string `json:"mailAddress"`
-		PassWord    string `json:"passWord"`
-		Token       string `json:"token"`
-	}
-	var req request
-	err := handlerutil.ParseJsonBody(r, &req)
-	if err != nil {
-		return "", paseto.JSONToken{}, "", "", err
-	}
+	token := r.Header.Get("x-token")
+
 	var newJsonToken paseto.JSONToken
 	var newFooter string
 	//公開鍵を生成
 	publicKey := ed25519.PrivateKey(secretKey).Public()
-	err = paseto.NewV2().Verify(req.Token, publicKey, &newJsonToken, &newFooter)
+	err := paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
 	if err != nil {
-		return "", paseto.JSONToken{}, "", "", err
+		return "", paseto.JSONToken{}, "", err
 	}
 
-	return req.Token, newJsonToken, newFooter, req.Id, nil
+	return token, newJsonToken, newFooter, nil
 
+}
+
+//CheckJsonBody : Jsonボディをチェック.
+func CheckJsonBody(r *http.Request) (string, string, string, error) {
+	type request struct {
+		Id          string `json:"id"`
+		MailAddress string `json:"mailAddress"`
+		PassWord    string `json:"passWord"`
+	}
+	var req request
+	err := handlerutil.ParseJsonBody(r, &req)
+	if err != nil {
+		return "", "", "", err
+	}
+	return req.Id, req.MailAddress, req.PassWord, err
 }
 
 //UserGet : トークンのチェックを行う.ユーザー情報取得はUserGetImpl()に丸投げ.
@@ -160,7 +166,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		_, _, _, _, err := CheckPasetoAuth(w, r)
+		_, _, _, err := CheckPasetoAuth(w, r)
 		if err != nil {
 			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 			_, err := w.Write([]byte("permission error"))
@@ -177,7 +183,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 
 //UserGetImpl : ユーザー情報取得処理を行う.
 func UserGetImpl(w http.ResponseWriter, r *http.Request) {
-	_, _, _, id, err := CheckPasetoAuth(w, r)
+	id, _, _, err := CheckJsonBody(r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 		_, err = w.Write([]byte("permission error"))
@@ -202,7 +208,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		"\"id\": \"" + loginUser.Id + "\"" +
 		"\"name\": \"" + loginUser.Name + "\"" +
 		"\"score\": \"" + strconv.Itoa(loginUser.Score) + "\"" +
-		"\"rank\": \"" + strconv.Itoa(rank) + "\""))
+		"\"rank\": \"" + strconv.Itoa(rank) + "\"" + "\n}"))
 
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
@@ -212,10 +218,12 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 
 //UserUpdate : ユーザー情報の更新.処理の中身はUserUpdateImpl()に丸投げ.
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
-	err := UserUpdateImpl(w, r)
+	err := userUpdateImpl(w, r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
 
 }

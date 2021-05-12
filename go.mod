@@ -12,5 +12,5 @@ require (
 	github.com/o1egl/paseto v1.0.0
 	github.com/poy/onpar v1.1.2 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	
 )

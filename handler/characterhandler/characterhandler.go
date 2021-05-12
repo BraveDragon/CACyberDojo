@@ -35,8 +35,8 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 
 //ShowOwnCharactersImpl : ShowOwnCharactersの処理の本体.
 func ShowOwnCharactersImpl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
-	//ユーザーを取得するためにjsonTokenを取得
-	_, _, _, id, err := userhandler.CheckPasetoAuth(w, r)
+	//ユーザーIDを取得
+	id, _, _, err := userhandler.CheckJsonBody(r)
 	if err != nil {
 		return []charactermodel.Character{}, commonErrors.FailedToAuthorizationError()
 	}

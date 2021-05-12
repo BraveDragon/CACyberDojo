@@ -14,7 +14,6 @@ import (
 
 	"github.com/go-gorp/gorp"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -55,25 +54,25 @@ func main() {
 		passWord = scanner.Text()
 	}
 
-	hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(mailAddress), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal(err)
-	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passWord), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(mailAddress), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passWord), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	fmt.Println("ID : " + id)
-	fmt.Println("name : " + string(name))
-	fmt.Println("mailAddress : " + string(hashedMailAddress))
-	fmt.Println("passWord : " + string(hashedPassword))
+	fmt.Println("name : " + name)
+	fmt.Println("mailAddress : " + mailAddress)
+	fmt.Println("passWord : " + passWord)
 
 	err = dbHandler.Insert(&usermodel.User{
 		Id:          id,
 		Name:        name,
-		PassWord:    string(hashedPassword),
-		MailAddress: string(hashedMailAddress),
+		PassWord:    passWord,
+		MailAddress: mailAddress,
 		PrivateKey:  privateKey,
 	})
 	if err != nil {
