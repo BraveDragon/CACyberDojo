@@ -9,12 +9,6 @@ func NoAuthorizationheaderError() error {
 
 }
 
-//IncorrectJsonBodyError : Jsonボディが不正な時のエラー.
-func IncorrectJsonBodyError() error {
-	return errors.New("the json body is incorrect")
-
-}
-
 //IncorrectTokenError : トークンが不正な時のエラー.
 func IncorrectTokenError() error {
 	return errors.New("the token is incorrect")

@@ -7,7 +7,6 @@ import (
 	"CACyberDojo/model/usermodel"
 	"crypto/ed25519"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -130,26 +129,26 @@ func userCreateImpl(r *http.Request) (string, error) {
 func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, string, error) {
 
 	type request struct {
-		id          string `json:"id"`
-		mailAddress string `json:"mailAddress"`
-		passWord    string `json:"passWord"`
-		token       string `json:"token"`
+		Id          string `json:"id"`
+		MailAddress string `json:"mailAddress"`
+		PassWord    string `json:"passWord"`
+		Token       string `json:"token"`
 	}
 	var req request
 	err := handlerutil.ParseJsonBody(r, &req)
 	if err != nil {
-		return "", paseto.JSONToken{}, "", "", commonErrors.IncorrectTokenError()
+		return "", paseto.JSONToken{}, "", "", err
 	}
 	var newJsonToken paseto.JSONToken
 	var newFooter string
 	//公開鍵を生成
 	publicKey := ed25519.PrivateKey(secretKey).Public()
-	err = paseto.NewV2().Verify(req.token, publicKey, &newJsonToken, &newFooter)
+	err = paseto.NewV2().Verify(req.Token, publicKey, &newJsonToken, &newFooter)
 	if err != nil {
-		return "", paseto.JSONToken{}, "", "", commonErrors.IncorrectTokenError()
+		return "", paseto.JSONToken{}, "", "", err
 	}
 
-	return req.token, newJsonToken, newFooter, req.id, nil
+	return req.Token, newJsonToken, newFooter, req.Id, nil
 
 }
 
@@ -191,28 +190,24 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	loginUser, err := usercontroller.GetOneUser(id)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-	}
-	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングを出力
-	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Id)))
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-	}
-	_, err = w.Write([]byte(fmt.Sprintf(loginUser.Name)))
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-	}
-	_, err = w.Write([]byte(fmt.Sprint(strconv.Itoa(loginUser.Score))))
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
 	}
 	rank, err := usercontroller.GetUserRank(loginUser)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-	_, err = w.Write([]byte(fmt.Sprint(strconv.Itoa(rank))))
+
+	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングをjson形式で出力
+	_, err = w.Write([]byte("{\n" +
+		"\"id\": \"" + loginUser.Id + "\"" +
+		"\"name\": \"" + loginUser.Name + "\"" +
+		"\"score\": \"" + strconv.Itoa(loginUser.Score) + "\"" +
+		"\"rank\": \"" + strconv.Itoa(rank) + "\""))
+
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 //UserUpdate : ユーザー情報の更新.処理の中身はUserUpdateImpl()に丸投げ.
