@@ -18,7 +18,7 @@ func ParseJsonBody(r *http.Request, decordtarget interface{}) error {
 
 //ErrorLoggingAndWriteHeader : errのnilチェック＋Log吐き＋httpステータスをw.WriteHeader()する.
 func ErrorLoggingAndWriteHeader(w http.ResponseWriter, err error, httpStatus int) {
-	log.Print(err.Error())
+	log.Println(err.Error())
 	w.WriteHeader(httpStatus)
 
 }

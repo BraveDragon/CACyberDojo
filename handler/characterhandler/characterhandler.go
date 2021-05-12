@@ -31,7 +31,11 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
-	w.Write(resResult)
+	_, err = w.Write(resResult)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
+	}
 
 }
 

@@ -65,6 +65,10 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	rawResult := result{Token: token}
 	resResult, err := json.Marshal(rawResult)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
+	}
 	_, err = w.Write(resResult)
 	//w.Write()のエラーチェック
 	if err != nil {
@@ -216,6 +220,10 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	}
 	rawResult := result{Id: loginUser.Id, Name: loginUser.Name, Score: strconv.Itoa(loginUser.Score), Rank: strconv.Itoa(rank)}
 	resResult, err := json.Marshal(rawResult)
+	if err != nil {
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+		return
+	}
 	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングをjson形式で出力
 	_, err = w.Write(resResult)
 

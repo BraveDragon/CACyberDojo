@@ -18,6 +18,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func init() {
+	log.SetFlags(log.Llongfile)
+
+}
+
 func main() {
 	err := model.Init()
 	if err != nil {

@@ -77,7 +77,10 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	w.Write(res)
+	_, err = w.Write(res)
+	if err != nil {
+		return err
+	}
 	return nil
 
 }
