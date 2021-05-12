@@ -36,13 +36,13 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 //ShowOwnCharactersImpl : ShowOwnCharactersの処理の本体.
 func ShowOwnCharactersImpl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
 	//ユーザーを取得するためにjsonTokenを取得
-	_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+	_, _, _, id, err := userhandler.CheckPasetoAuth(w, r)
 	if err != nil {
 		return []charactermodel.Character{}, commonErrors.FailedToAuthorizationError()
 	}
 
 	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(jsonToken)
+	loginUser, err := usercontroller.GetOneUser(id)
 	if err != nil {
 		return []charactermodel.Character{}, commonErrors.FailedToGetUserError()
 	}

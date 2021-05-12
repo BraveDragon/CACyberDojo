@@ -11,7 +11,7 @@ func NoAuthorizationheaderError() error {
 
 //IncorrectJsonBodyError : Jsonボディが不正な時のエラー.
 func IncorrectJsonBodyError() error {
-	return errors.New("the json body is incorrect!")
+	return errors.New("the json body is incorrect")
 
 }
 

@@ -1,7 +1,6 @@
 package handlerutil
 
 import (
-	"CACyberDojo/commonErrors"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 func ParseJsonBody(r *http.Request, decordtarget interface{}) error {
 	err := json.NewDecoder(r.Body).Decode(&decordtarget)
 	if err != nil {
-		return commonErrors.IncorrectJsonBodyError()
+		return err
 	} else {
 		return nil
 	}

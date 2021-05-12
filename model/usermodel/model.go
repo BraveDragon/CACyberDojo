@@ -1,10 +1,7 @@
 package usermodel
 
 import (
-	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 //CreateUser : ユーザーを新規作成してDBに追加.
@@ -43,22 +40,23 @@ func UserAuthorization(mailAddress string, password string) (User, error) {
 	dbMap := model.NewDBMap(model.DB)
 	//DBと構造体を結びつける
 	dbMap.AddTableWithName(User{}, "users")
-	var DBusers []User
-	_, err := dbMap.Select(&DBusers, "SELECT * FROM users")
+	var dbUser User
+	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE mailAddress = ? AND password = ?", mailAddress, password)
 	if err != nil {
 		return User{}, err
 	}
-	for _, DBUser := range DBusers {
-		errPass := bcrypt.CompareHashAndPassword([]byte(DBUser.PassWord), []byte(password))
-		errAddress := bcrypt.CompareHashAndPassword([]byte(DBUser.MailAddress), []byte(mailAddress))
-		if errPass == nil && errAddress == nil {
-			//両方とも一致するものがDB内にあればそれを返す
-			return DBUser, nil
-		}
-	}
+	//TODO: パスワード・メールアドレスの暗号化
+	// for _, DBUser := range DBusers {
+	// 	errPass := bcrypt.CompareHashAndPassword([]byte(DBUser.PassWord), []byte(password))
+	// 	errAddress := bcrypt.CompareHashAndPassword([]byte(DBUser.MailAddress), []byte(mailAddress))
+	// 	if errPass == nil && errAddress == nil {
+	// 		//両方とも一致するものがDB内にあればそれを返す
+	// 		return DBUser, nil
+	// 	}
+	// }
 	//見つからない場合はエラーを返す
-	return User{}, commonErrors.FailedToSearchError()
-
+	//return User{}, commonErrors.FailedToSearchError()
+	return dbUser, nil
 }
 
 //UpdateUser : ユーザー名を引数の内容に更新

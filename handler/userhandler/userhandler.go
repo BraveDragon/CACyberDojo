@@ -15,18 +15,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
-	"golang.org/x/crypto/bcrypt"
 )
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
 func UserUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	// 誰がログインしているかをチェック
-	_, jsonToken, _, err := CheckPasetoAuth(w, r)
+	_, _, _, id, err := CheckPasetoAuth(w, r)
 	if err != nil {
 		return commonErrors.FailedToAuthorizationError()
 	}
 	//トークンから主キーのユーザーIDを取得
-	loginUser, err := usercontroller.GetOneUser(jsonToken)
+	loginUser, err := usercontroller.GetOneUser(id)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//トークンをjson形式で返す
-	_, err = w.Write([]byte("{\n" + "token: " + "\"" + token + "\"" + "\n}"))
+	_, err = w.Write([]byte("{\n" + "\"" + "token\": " + "\"" + token + "\"" + "\n}"))
 	//w.Write()のエラーチェック
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
@@ -69,6 +68,10 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+//秘密鍵生成用のシード(128桁)
+//TODO: 文字列を途中で折り返す方法を見つける
+const secretKey = "276538ba123456091749759837598027127498375957987902740982774983748a276538ba12345609174975983759802712749837595798790274098273748a"
 
 //UserCreateImpl : userhandler.UserCreate()の処理の本体.ユーザー情報取得を行う.
 func userCreateImpl(r *http.Request) (string, error) {
@@ -78,18 +81,19 @@ func userCreateImpl(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	//TODO:パスワード・メールアドレスのハッシュ化
 	//パスワードをハッシュ化して格納
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(jsonUser.PassWord), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	jsonUser.PassWord = string(hashedPassword)
+	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(jsonUser.PassWord), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// jsonUser.PassWord = string(hashedPassword)
 	//メールアドレスをハッシュ化して格納
-	hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(jsonUser.MailAddress), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	jsonUser.MailAddress = string(hashedMailAddress)
+	// hashedMailAddress, err := bcrypt.GenerateFromPassword([]byte(jsonUser.MailAddress), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// jsonUser.MailAddress = string(hashedMailAddress)
 
 	//IDはUUIDで生成
 	UUID, _ := uuid.NewUUID()
@@ -99,15 +103,11 @@ func userCreateImpl(r *http.Request) (string, error) {
 	//ここから認証トークン生成部
 	//認証トークンの生成方法は以下のサイトを参考にしている
 	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
-	//秘密鍵生成用のシード(128桁)
-	//TODO: 文字列を途中で折り返す方法を見つける
-	const secretKey = "276538ba123456091749759837598027127498375957987902740982774983748a276538ba12345609174975983759802712749837595798790274098273748a"
 
 	b, err := hex.DecodeString(secretKey)
 	if err != nil {
 		return "", err
 	}
-	//TODO: len(privateKey)が64にならない問題を解決する
 	privateKey := ed25519.PrivateKey(b)
 
 	jsonUser.PrivateKey = privateKey
@@ -127,24 +127,29 @@ func userCreateImpl(r *http.Request) (string, error) {
 }
 
 //CheckPasetoAuth : トークンの検証.
-func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
-	bearerToken := r.Header.Get("Authorization")
+func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, string, error) {
 
-	if bearerToken == "" {
-		//Authorizationヘッダーがない時はエラーを返す
-		w.WriteHeader(http.StatusBadRequest)
-		return "", paseto.JSONToken{}, "", commonErrors.NoAuthorizationheaderError()
+	type request struct {
+		id          string `json:"id"`
+		mailAddress string `json:"mailAddress"`
+		passWord    string `json:"passWord"`
+		token       string `json:"token"`
 	}
-	tokenStr := bearerToken[7:]
+	var req request
+	err := handlerutil.ParseJsonBody(r, &req)
+	if err != nil {
+		return "", paseto.JSONToken{}, "", "", commonErrors.IncorrectTokenError()
+	}
 	var newJsonToken paseto.JSONToken
 	var newFooter string
-	publicKey, _, _ := ed25519.GenerateKey(nil)
-	err := paseto.NewV2().Verify(tokenStr, publicKey, &newJsonToken, &newFooter)
+	//公開鍵を生成
+	publicKey := ed25519.PrivateKey(secretKey).Public()
+	err = paseto.NewV2().Verify(req.token, publicKey, &newJsonToken, &newFooter)
 	if err != nil {
-		return "", paseto.JSONToken{}, "", commonErrors.IncorrectTokenError()
+		return "", paseto.JSONToken{}, "", "", commonErrors.IncorrectTokenError()
 	}
 
-	return tokenStr, newJsonToken, newFooter, nil
+	return req.token, newJsonToken, newFooter, req.id, nil
 
 }
 
@@ -156,7 +161,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		_, _, _, err := CheckPasetoAuth(w, r)
+		_, _, _, _, err := CheckPasetoAuth(w, r)
 		if err != nil {
 			handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 			_, err := w.Write([]byte("permission error"))
@@ -173,7 +178,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 
 //UserGetImpl : ユーザー情報取得処理を行う.
 func UserGetImpl(w http.ResponseWriter, r *http.Request) {
-	_, jsonToken, _, err := CheckPasetoAuth(w, r)
+	_, _, _, id, err := CheckPasetoAuth(w, r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 		_, err = w.Write([]byte("permission error"))
@@ -183,7 +188,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(jsonToken)
+	loginUser, err := usercontroller.GetOneUser(id)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
@@ -222,16 +227,16 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 //UserSignIn : ユーザーのサインイン処理を行う.
 func UserSignIn(w http.ResponseWriter, r *http.Request) string {
-	jsonUser := usermodel.User{}
+	loginUser := usermodel.User{}
 	//JSONボディから必要なデータを取得
-	err := handlerutil.ParseJsonBody(r, &jsonUser)
+	err := handlerutil.ParseJsonBody(r, &loginUser)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
 		return ""
 	}
 
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	user, err := usercontroller.UserAuthorization(jsonUser.MailAddress, jsonUser.PassWord)
+	user, err := usercontroller.UserAuthorization(loginUser.MailAddress, loginUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
@@ -242,7 +247,7 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) string {
 	token, err := CreateToken(user)
 
 	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
+		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return ""
 	}
 	return token

@@ -3,13 +3,10 @@ package usercontroller
 import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model/usermodel"
-
-	"github.com/o1egl/paseto"
 )
 
-//GetOneUser : jsonTokenからユーザーを取得.
-func GetOneUser(jsonToken paseto.JSONToken) (usermodel.User, error) {
-	id := jsonToken.Get("id")
+//GetOneUser : idからユーザーを取得.
+func GetOneUser(id string) (usermodel.User, error) {
 	loginUser := usermodel.User{}
 	err := usermodel.GetOneUser(&loginUser, id)
 	if err != nil {
