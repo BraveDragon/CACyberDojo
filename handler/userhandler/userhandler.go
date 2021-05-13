@@ -247,31 +247,17 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 //UserSignIn : ユーザーのサインイン処理を行う.
-func UserSignIn(w http.ResponseWriter, r *http.Request) string {
+func UserSignIn(w http.ResponseWriter, r *http.Request) (usermodel.User, error) {
 	loginUser := usermodel.User{}
-	//JSONボディから必要なデータを取得
-	err := handlerutil.ParseJsonBody(r, &loginUser)
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusBadRequest)
-		return ""
-	}
-
+	loginUser.MailAddress = r.Header.Get("mailaddress")
+	loginUser.PassWord = r.Header.Get("password")
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
 	user, err := usercontroller.UserAuthorization(loginUser.MailAddress, loginUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
-		return ""
+		return usermodel.User{}, err
 	}
-
-	//トークンを生成
-	token, err := CreateToken(user)
-
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-		return ""
-	}
-	return token
+	return user, nil
 
 }
 

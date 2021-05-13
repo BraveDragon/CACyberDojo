@@ -11,7 +11,12 @@ import (
 func AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			userhandler.UserSignIn(w, r)
+			_, err := userhandler.UserSignIn(w, r)
+			if err != nil {
+				//サインインに失敗すればエラーをログに記録
+				handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
+				return
+			}
 			next.ServeHTTP(w, r)
 		})
 }
@@ -25,7 +30,7 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 			if err != nil {
 				//トークンが無効ならエラーを返す
 				handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
-
+				return
 			}
 			now := time.Now()
 			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
