@@ -36,6 +36,7 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 //GachaDrawHandlerImpl : GachaDrawHandler()の処理の本体.
 func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//ユーザーを取得するためにjsonTokenを取得
+	//TODO:nilエラーの原因を突き止める
 	id, _, _, err := userhandler.CheckJsonBody(r)
 	if err != nil {
 		return commonErrors.FailedToAuthorizationError()

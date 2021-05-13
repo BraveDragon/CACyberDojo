@@ -1,6 +1,7 @@
 package usermodel
 
 import (
+	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
 )
 
@@ -32,20 +33,25 @@ func GetOneUser(user *User, id string) error {
 	dbMap := model.NewDBMap(model.DB)
 	//DBと構造体を結びつける
 	dbMap.AddTableWithName(User{}, "users")
-	return dbMap.SelectOne(&user, "SELECT * FROM user WHERE ID = ?", id)
+	return dbMap.SelectOne(&user, "SELECT * FROM users WHERE ID = ?", id)
 }
 
 //UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
-func UserAuthorization(mailAddress string, password string) (User, error) {
+func UserAuthorization(id string, mailAddress string, password string) (User, error) {
 	dbMap := model.NewDBMap(model.DB)
 	//DBと構造体を結びつける
 	dbMap.AddTableWithName(User{}, "users")
 	var dbUser User
-	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE mailAddress=? AND password=?", mailAddress, password)
+	//idでDBから抽出
+	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE id=?", id)
 	if err != nil {
 		return User{}, err
 	}
-	//TODO: パスワード・メールアドレスの暗号化
+	//メールアドレスとパスワードが一致しないならエラーを返す
+	if dbUser.MailAddress != mailAddress || dbUser.PassWord != password {
+		return User{}, commonErrors.FailedToAuthorizationError()
+	}
+	//TODO: パスワード・メールアドレスの暗号化の復号
 	// for _, DBUser := range DBusers {
 	// 	errPass := bcrypt.CompareHashAndPassword([]byte(DBUser.PassWord), []byte(password))
 	// 	errAddress := bcrypt.CompareHashAndPassword([]byte(DBUser.MailAddress), []byte(mailAddress))

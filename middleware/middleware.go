@@ -35,12 +35,10 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 			now := time.Now()
 			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
 			if jsonToken.Expiration.After(now) {
-				w.WriteHeader(http.StatusOK)
-
+				//何もしない
 			} else {
 				//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
 				userhandler.UserSignIn(w, r)
-				w.WriteHeader(http.StatusOK)
 
 			}
 			next.ServeHTTP(w, r)

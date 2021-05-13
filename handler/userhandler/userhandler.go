@@ -19,6 +19,7 @@ import (
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
 func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
+	//TODO:EOFの原因を突き止める
 	// 誰がログインしているかをチェック
 	id, _, _, err := CheckJsonBody(r)
 	if err != nil {
@@ -251,8 +252,9 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) (usermodel.User, error) 
 	loginUser := usermodel.User{}
 	loginUser.MailAddress = r.Header.Get("mailaddress")
 	loginUser.PassWord = r.Header.Get("password")
+	loginUser.Id = r.Header.Get("id")
 	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	user, err := usercontroller.UserAuthorization(loginUser.MailAddress, loginUser.PassWord)
+	user, err := usercontroller.UserAuthorization(loginUser.Id, loginUser.MailAddress, loginUser.PassWord)
 	if err != nil {
 		//メールアドレスとパスワードの組がDBになければエラーを返す
 		return usermodel.User{}, err

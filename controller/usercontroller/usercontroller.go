@@ -33,6 +33,6 @@ func AddUserScore(user usermodel.User, addScore int) error {
 }
 
 //UserAuthorization : ユーザー認証を行う.処理はusermodel.UserAuthorization()に丸投げ.
-func UserAuthorization(mailAddress string, password string) (usermodel.User, error) {
-	return usermodel.UserAuthorization(mailAddress, password)
+func UserAuthorization(id string, mailAddress string, password string) (usermodel.User, error) {
+	return usermodel.UserAuthorization(id, mailAddress, password)
 }
