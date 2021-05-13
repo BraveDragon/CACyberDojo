@@ -4,7 +4,6 @@ import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model/charactermodel"
 	"CACyberDojo/model/gachamodel"
-	"log"
 	"math/rand"
 	"time"
 )
@@ -15,20 +14,20 @@ type Drawer func(drawTimes int, gachaContents []gachamodel.Gacha) []charactermod
 //draw : 確変も何も行わない普通のガチャ.
 func draw(drawTimes int, gachaContents []gachamodel.Gacha) []charactermodel.Character {
 	results := []charactermodel.Character{}
-	for i := 0; i < (drawTimes - 1); i++ {
+	for i := 0; i < drawTimes; i++ {
 		rand.Seed(time.Now().UnixNano())
 		//0以上1未満の乱数を生成(結果となる)
 		lottery := rand.Float64()
-
+		sumProb := 0.0
 		for _, gachaContent := range gachaContents {
-			//lotteryからcontent.DropRateの値を引いていき、lotteryが0以下になった時のcontentを結果とする
-			lottery -= gachaContent.DropRate
-			if lottery <= 0 {
+			sumProb += gachaContent.DropRate
+			if lottery <= sumProb {
 				result, err := charactermodel.SearchCharacterById(gachaContent.CharacterId)
 				if err != nil {
 					return []charactermodel.Character{}
 				}
 				results = append(results, result)
+				break
 			}
 
 		}
@@ -43,11 +42,9 @@ func DrawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 	var gachaContents []gachamodel.Gacha
 	err := gachamodel.SelectGacha(&gachaContents, id)
 	if err != nil {
-		log.Print("DG err 1")
 		return nil, err
 	}
 	if drawTimes == 0 {
-		log.Print("DG err 2")
 		return []charactermodel.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
 
