@@ -1,7 +1,6 @@
 package userhandler
 
 import (
-	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
@@ -21,18 +20,13 @@ import (
 func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	//TODO:EOFの原因を突き止める
 	// 誰がログインしているかをチェック
-	id, _, _, err := CheckJsonBody(r)
-	if err != nil {
-		return commonErrors.FailedToAuthorizationError()
-	}
-	//ユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(id)
+	jsonUser := usermodel.User{}
+	//jsonボディからメールアドレスとパスワードを取得
+	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
 		return err
 	}
-	jsonUser := usermodel.User{}
-	//jsonボディからメールアドレスとパスワードを取得
-	err = handlerutil.ParseJsonBody(r, &jsonUser)
+	loginUser, err := usercontroller.GetOneUser(jsonUser.Id)
 	if err != nil {
 		return err
 	}
@@ -227,7 +221,6 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 //UserUpdate : ユーザー情報の更新.処理の中身はUserUpdateImpl()に丸投げ.

@@ -6,7 +6,6 @@ import (
 	"CACyberDojo/controller/gachacontroller"
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
-	"CACyberDojo/handler/userhandler"
 	"CACyberDojo/model/charactermodel"
 	"encoding/json"
 	"log"
@@ -15,8 +14,9 @@ import (
 
 //GachaRequest : ガチャを引く時のリクエストの中身.
 type GachaRequest struct {
-	GachaId   int `json:"gachaId"`
-	DrawTimes int `json:"drawTimes"`
+	GachaId   int    `json:"gachaId"`
+	DrawTimes int    `json:"times"`
+	UserId    string `json:"id"`
 }
 
 //GachaDrawHandler : ガチャ処理のハンドラ.処理本体はGachaDrawHandlerImpl()に丸投げ.
@@ -35,20 +35,9 @@ func GachaDrawHandler(w http.ResponseWriter, r *http.Request) {
 
 //GachaDrawHandlerImpl : GachaDrawHandler()の処理の本体.
 func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
-	//ユーザーを取得するためにjsonTokenを取得
-	//TODO:nilエラーの原因を突き止める
-	id, _, _, err := userhandler.CheckJsonBody(r)
-	if err != nil {
-		return commonErrors.FailedToAuthorizationError()
-	}
-	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(id)
-	if err != nil {
-		return err
-	}
 	//何のガチャを何回引くかをリクエストで受け取る
 	gachaRequest := GachaRequest{}
-	err = handlerutil.ParseJsonBody(r, &gachaRequest)
+	err := handlerutil.ParseJsonBody(r, &gachaRequest)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		return commonErrors.FailedToCreateTokenError()
@@ -58,8 +47,14 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	err = charactercontroller.AddOwnCharacters(loginUser.Id, results)
+	err = charactercontroller.AddOwnCharacters(gachaRequest.UserId, results)
 	if err != nil {
+		log.Print("err 3")
+		return err
+	}
+	loginUser, err := usercontroller.GetOneUser(gachaRequest.UserId)
+	if err != nil {
+		log.Print("err 4")
 		return err
 	}
 
@@ -67,6 +62,7 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	for _, result := range results {
 		err := usercontroller.AddUserScore(loginUser, result.Strength)
 		if err != nil {
+			log.Print("err 5")
 			return err
 		}
 	}
@@ -76,10 +72,12 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	resResult := result{Results: results}
 	res, err := json.Marshal(resResult)
 	if err != nil {
+		log.Print("err 6")
 		return err
 	}
 	_, err = w.Write(res)
 	if err != nil {
+		log.Print("err 7")
 		return err
 	}
 	return nil
