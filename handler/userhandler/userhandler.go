@@ -195,7 +195,7 @@ func UserGet(handler func(w http.ResponseWriter, r *http.Request)) func(http.Res
 
 //UserGetImpl : ユーザー情報取得処理を行う.
 func UserGetImpl(w http.ResponseWriter, r *http.Request) {
-	id, _, _, err := CheckJsonBody(r)
+	loginUser, err := UserSignIn(w, r)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusForbidden)
 		_, err = w.Write([]byte("permission error"))
@@ -204,12 +204,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(id)
-	if err != nil {
-		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
-		return
-	}
+
 	rank, err := usercontroller.GetUserRank(loginUser)
 	if err != nil {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
