@@ -40,10 +40,12 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	err := handlerutil.ParseJsonBody(r, &gachaRequest)
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
+		log.Print("err 1")
 		return commonErrors.FailedToCreateTokenError()
 	}
 	results, err := gachacontroller.DrawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
 	if err != nil {
+		log.Print("err 2")
 		return err
 	}
 

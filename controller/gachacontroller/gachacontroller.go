@@ -4,6 +4,7 @@ import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/model/charactermodel"
 	"CACyberDojo/model/gachamodel"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -42,9 +43,11 @@ func DrawGacha(id int, drawTimes int) ([]charactermodel.Character, error) {
 	var gachaContents []gachamodel.Gacha
 	err := gachamodel.SelectGacha(&gachaContents, id)
 	if err != nil {
+		log.Print("DG err 1")
 		return nil, err
 	}
 	if drawTimes == 0 {
+		log.Print("DG err 2")
 		return []charactermodel.Character{}, commonErrors.TrytoDrawZeroTimes()
 	}
 
