@@ -3,7 +3,6 @@ package characterhandler
 import (
 	"CACyberDojo/commonErrors"
 	"CACyberDojo/controller/charactercontroller"
-	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/handler/userhandler"
 	"CACyberDojo/model/charactermodel"
@@ -41,16 +40,10 @@ func ShowOwnCharacters(w http.ResponseWriter, r *http.Request) {
 
 //ShowOwnCharactersImpl : ShowOwnCharactersの処理の本体.
 func ShowOwnCharactersImpl(w http.ResponseWriter, r *http.Request) ([]charactermodel.Character, error) {
-	//ユーザーIDを取得
-	id, _, _, err := userhandler.CheckJsonBody(r)
+	//ログインしているユーザーを取得
+	loginUser, err := userhandler.UserSignIn(w, r)
 	if err != nil {
 		return []charactermodel.Character{}, commonErrors.FailedToAuthorizationError()
-	}
-
-	//ログインしているユーザーを取得
-	loginUser, err := usercontroller.GetOneUser(id)
-	if err != nil {
-		return []charactermodel.Character{}, commonErrors.FailedToGetUserError()
 	}
 	//所持キャラクター一覧を取得
 	Characters, err := charactercontroller.GetOwnCharacters(loginUser.Id)
