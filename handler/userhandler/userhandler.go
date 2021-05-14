@@ -18,10 +18,10 @@ import (
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
 func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
-	//TODO:EOFの原因を突き止める
 	// 誰がログインしているかをチェック
 	jsonUser := usermodel.User{}
-	//jsonボディからメールアドレスとパスワードを取得
+	jsonUser.Id = r.Header.Get("id")
+	//jsonボディからIDを取得
 	err := handlerutil.ParseJsonBody(r, &jsonUser)
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 	//公開鍵を生成
 	//publicKey := ed25519.PrivateKey(secretKey).Public()
 	//TODO:トークンを検証
-	// err := paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
+	//err := paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
 	// if err != nil {
 	// 	return "", paseto.JSONToken{}, "", err
 	// }
