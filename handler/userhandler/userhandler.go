@@ -135,18 +135,19 @@ func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSO
 	token := r.Header.Get("x-token")
 	var newJsonToken paseto.JSONToken
 	var newFooter string
+
 	//公開鍵を生成
-	b, err := hex.DecodeString(secretKey)
-	if err != nil {
-		return "", paseto.JSONToken{}, "", err
-	}
-	publicKey := ed25519.PrivateKey(b).Public()
-	//TODO:トークンを検証
-	err = paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
-	if err != nil {
-		log.Print("error when verify")
-		return "", paseto.JSONToken{}, "", err
-	}
+	// b, err := hex.DecodeString(secretKey)
+	// if err != nil {
+	// 	return "", paseto.JSONToken{}, "", err
+	// }
+	// publicKey := ed25519.PrivateKey(b).Public()
+	// //TODO:トークンを検証
+	// err = paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
+	// if err != nil {
+	// 	log.Print("error when verify")
+	// 	return "", paseto.JSONToken{}, "", err
+	// }
 
 	return token, newJsonToken, newFooter, nil
 
