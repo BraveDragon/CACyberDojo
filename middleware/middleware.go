@@ -26,20 +26,39 @@ func RefreshMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// トークンの検証(有効かどうか)
-			_, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
+			token, jsonToken, _, err := userhandler.CheckPasetoAuth(w, r)
 			if err != nil {
 				//トークンが無効ならエラーを返す
 				handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusUnauthorized)
 				return
 			}
 			now := time.Now()
-			//トークンの有効期限がまだ切れていない時は何もせずにそのまま返す
+			//トークンの有効期限がまだ切れていない時は何もせずにトークンをそのまま返す
 			if jsonToken.Expiration.After(now) {
-				//何もしない
+				//トークンをCookieで送る
+				cookie := &http.Cookie{
+					Name:     "newtoken",
+					Value:    token,
+					HttpOnly: true,
+				}
+				http.SetCookie(w, cookie)
 			} else {
 				//有効期限が切れていたらもう一度サインインしてトークンをリフレッシュ
-				userhandler.UserSignIn(w, r)
-
+				user, err := userhandler.UserSignIn(w, r)
+				if err != nil {
+					handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+				}
+				token, err := userhandler.CreateToken(user)
+				if err != nil {
+					handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
+				}
+				//トークンをCookieで送る
+				cookie := &http.Cookie{
+					Name:     "newtoken",
+					Value:    token,
+					HttpOnly: true,
+				}
+				http.SetCookie(w, cookie)
 			}
 			next.ServeHTTP(w, r)
 		})

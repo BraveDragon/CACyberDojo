@@ -40,23 +40,19 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	userId := r.Header.Get("id")
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
-		log.Print("err 1")
 		return commonErrors.FailedToCreateTokenError()
 	}
 	results, err := gachacontroller.DrawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
 	if err != nil {
-		log.Print("err 2")
 		return err
 	}
 
 	err = charactercontroller.AddOwnCharacters(userId, results)
 	if err != nil {
-		log.Print("err 3")
 		return err
 	}
 	loginUser, err := usercontroller.GetOneUser(userId)
 	if err != nil {
-		log.Print("err 4")
 		return err
 	}
 
@@ -64,7 +60,6 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	for _, result := range results {
 		err := usercontroller.AddUserScore(loginUser, result.Strength)
 		if err != nil {
-			log.Print("err 5")
 			return err
 		}
 	}
@@ -74,12 +69,10 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	resResult := result{Results: results}
 	res, err := json.Marshal(resResult)
 	if err != nil {
-		log.Print("err 6")
 		return err
 	}
 	_, err = w.Write(res)
 	if err != nil {
-		log.Print("err 7")
 		return err
 	}
 	return nil

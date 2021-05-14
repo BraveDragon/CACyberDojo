@@ -107,7 +107,6 @@ func userCreateImpl(r *http.Request) (string, error) {
 	//ここから認証トークン生成部
 	//認証トークンの生成方法は以下のサイトを参考にしている
 	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
-
 	b, err := hex.DecodeString(secretKey)
 	if err != nil {
 		return "", err
@@ -134,34 +133,23 @@ func userCreateImpl(r *http.Request) (string, error) {
 func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
 
 	token := r.Header.Get("x-token")
-
 	var newJsonToken paseto.JSONToken
 	var newFooter string
 	//公開鍵を生成
-	//publicKey := ed25519.PrivateKey(secretKey).Public()
+	b, err := hex.DecodeString(secretKey)
+	if err != nil {
+		return "", paseto.JSONToken{}, "", err
+	}
+	publicKey := ed25519.PrivateKey(b).Public()
 	//TODO:トークンを検証
-	//err := paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
-	// if err != nil {
-	// 	return "", paseto.JSONToken{}, "", err
-	// }
+	err = paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
+	if err != nil {
+		log.Print("error when verify")
+		return "", paseto.JSONToken{}, "", err
+	}
 
 	return token, newJsonToken, newFooter, nil
 
-}
-
-//CheckJsonBody : Jsonボディをチェック.
-func CheckJsonBody(r *http.Request) (string, string, string, error) {
-	type request struct {
-		Id          string `json:"id"`
-		MailAddress string `json:"mailAddress"`
-		PassWord    string `json:"passWord"`
-	}
-	var req request
-	err := handlerutil.ParseJsonBody(r, &req)
-	if err != nil {
-		return "", "", "", err
-	}
-	return req.Id, req.MailAddress, req.PassWord, err
 }
 
 //UserGet : トークンのチェックを行う.ユーザー情報取得はUserGetImpl()に丸投げ.
@@ -253,7 +241,7 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) (usermodel.User, error) 
 
 //トークン生成用の定数類
 //フッター
-const footer = "FOOTER"
+const footer = "eyJraWQiOiAiMTIzNDUifQ"
 
 //トークンの有効期限
 const expirationTime = 30 * time.Minute
