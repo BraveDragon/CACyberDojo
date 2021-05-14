@@ -14,9 +14,8 @@ import (
 
 //GachaRequest : ガチャを引く時のリクエストの中身.
 type GachaRequest struct {
-	GachaId   int    `json:"gachaId"`
-	DrawTimes int    `json:"times"`
-	UserId    string `json:"id"`
+	GachaId   int `json:"gachaId"`
+	DrawTimes int `json:"times"`
 }
 
 //GachaDrawHandler : ガチャ処理のハンドラ.処理本体はGachaDrawHandlerImpl()に丸投げ.
@@ -38,6 +37,7 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//何のガチャを何回引くかをリクエストで受け取る
 	gachaRequest := GachaRequest{}
 	err := handlerutil.ParseJsonBody(r, &gachaRequest)
+	userId := r.Header.Get("id")
 	if err != nil {
 		//bodyの構造がおかしい時はエラーを返す
 		log.Print("err 1")
@@ -49,12 +49,12 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	err = charactercontroller.AddOwnCharacters(gachaRequest.UserId, results)
+	err = charactercontroller.AddOwnCharacters(userId, results)
 	if err != nil {
 		log.Print("err 3")
 		return err
 	}
-	loginUser, err := usercontroller.GetOneUser(gachaRequest.UserId)
+	loginUser, err := usercontroller.GetOneUser(userId)
 	if err != nil {
 		log.Print("err 4")
 		return err
