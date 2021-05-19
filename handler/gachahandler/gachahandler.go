@@ -37,9 +37,10 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//何のガチャを何回引くかをリクエストで受け取る
 	gachaRequest := GachaRequest{}
 	err := handlerutil.ParseJsonBody(r, &gachaRequest)
-	userId := r.Header.Get("id")
+
+	user, err := usercontroller.UserAuthorization(r.Header.Get("x-token"))
 	if err != nil {
-		//bodyの構造がおかしい時はエラーを返す
+		//ヘッダーがおかしい時はエラーを返す
 		return commonErrors.FailedToCreateTokenError()
 	}
 	results, err := gachacontroller.DrawGacha(gachaRequest.GachaId, gachaRequest.DrawTimes)
@@ -47,11 +48,11 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	err = charactercontroller.AddOwnCharacters(userId, results)
+	err = charactercontroller.AddOwnCharacters(user.Id, results)
 	if err != nil {
 		return err
 	}
-	loginUser, err := usercontroller.GetOneUser(userId)
+	loginUser, err := usercontroller.GetOneUser(user.Id)
 	if err != nil {
 		return err
 	}

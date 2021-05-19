@@ -1,7 +1,7 @@
 CREATE TABLE `users` (
 	`ID` VARCHAR(256) NOT NULL DEFAULT '0' COLLATE 'utf8mb4_0900_ai_ci',
 	`name` CHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-	`privateKey` BLOB NOT NULL,
+	`token` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`mailAddress` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`password` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
 	`score` INT(10) UNSIGNED NOT NULL DEFAULT '0',

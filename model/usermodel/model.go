@@ -1,7 +1,6 @@
 package usermodel
 
 import (
-	"CACyberDojo/commonErrors"
 	"CACyberDojo/model"
 )
 
@@ -37,20 +36,17 @@ func GetOneUser(user *User, id string) error {
 }
 
 //UserAuthorization : ユーザーのメールアドレスとパスワードがあるかチェック.
-func UserAuthorization(id string, mailAddress string, password string) (User, error) {
+func UserAuthorization(token string) (User, error) {
 	dbMap := model.NewDBMap(model.DB)
 	//DBと構造体を結びつける
 	dbMap.AddTableWithName(User{}, "users")
 	var dbUser User
 	//idでDBから抽出
-	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE id=?", id)
+	err := dbMap.SelectOne(&dbUser, "SELECT * FROM users WHERE token=?", token)
 	if err != nil {
 		return User{}, err
 	}
-	//メールアドレスとパスワードが一致しないならエラーを返す
-	if dbUser.MailAddress != mailAddress || dbUser.PassWord != password {
-		return User{}, commonErrors.FailedToAuthorizationError()
-	}
+
 	//TODO: パスワード・メールアドレスの暗号化の復号
 	// for _, DBUser := range DBusers {
 	// 	errPass := bcrypt.CompareHashAndPassword([]byte(DBUser.PassWord), []byte(password))

@@ -36,9 +36,8 @@ func main() {
 	//ユーザー認証をしない処理用のルーター
 	otherRouteCreator := router.PathPrefix("").Subrouter()
 
-	//ユーザー認証とトークンのリフレッシュはミドルウェアで行う
+	//ユーザー認証はミドルウェアで行う
 	authorizationRouteCreator.Use(middleware.AuthorizationMiddleware)
-	authorizationRouteCreator.Use(middleware.RefreshMiddleware)
 	//CORS対応もミドルウェアで行う
 	authorizationRouteCreator.Use(middleware.EnableCorsMiddleware)
 

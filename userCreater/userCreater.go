@@ -2,8 +2,6 @@ package main
 
 import (
 	"CACyberDojo/model/usermodel"
-	"crypto/ed25519"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -37,8 +35,8 @@ func main() {
 	UUID, _ := uuid.NewUUID()
 	id := UUID.String()
 
-	b, _ := hex.DecodeString(id)
-	privateKey := ed25519.PrivateKey(b)
+	// b, _ := hex.DecodeString(id)
+	// privateKey := ed25519.PrivateKey(b)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	var name string
@@ -73,7 +71,7 @@ func main() {
 		Name:        name,
 		PassWord:    passWord,
 		MailAddress: mailAddress,
-		PrivateKey:  privateKey,
+		//PrivateKey:  privateKey,
 	})
 	if err != nil {
 		fmt.Println("Error occurred when inserting.")

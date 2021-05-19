@@ -17,6 +17,16 @@ func GetOneUser(id string) (usermodel.User, error) {
 
 }
 
+//CreateUser : ユーザーを作成.処理はusermodel.CreateUser()に丸投げ.
+func CreateUser(user usermodel.User) error {
+	return usermodel.CreateUser(user)
+}
+
+//UserAuthorization : ユーザー認証を行う.処理はusermodel.UserAuthorization()に丸投げ.
+func UserAuthorization(token string) (usermodel.User, error) {
+	return usermodel.UserAuthorization(token)
+}
+
 //GetUserRank : ユーザーのランキングを取得. 処理はusermodel.GetUserRank()に丸投げ.
 func GetUserRank(user usermodel.User) (int, error) {
 	return usermodel.GetUserRank(user)
@@ -30,9 +40,4 @@ func UpdateUser(user usermodel.User) error {
 //AddUserScore : ユーザーのスコアを加算. 処理はusermodel.AddUserScore()に丸投げ.
 func AddUserScore(user usermodel.User, addScore int) error {
 	return usermodel.AddUserScore(user, addScore)
-}
-
-//UserAuthorization : ユーザー認証を行う.処理はusermodel.UserAuthorization()に丸投げ.
-func UserAuthorization(id string, mailAddress string, password string) (usermodel.User, error) {
-	return usermodel.UserAuthorization(id, mailAddress, password)
 }

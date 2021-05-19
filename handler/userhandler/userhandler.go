@@ -4,10 +4,9 @@ import (
 	"CACyberDojo/controller/usercontroller"
 	"CACyberDojo/handler/handlerutil"
 	"CACyberDojo/model/usermodel"
-	"crypto/ed25519"
-	"encoding/hex"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,19 +17,20 @@ import (
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
 func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
+	type request struct {
+		Name string `json:"name"`
+	}
 	// 誰がログインしているかをチェック
-	jsonUser := usermodel.User{}
-	jsonUser.Id = r.Header.Get("id")
-	//jsonボディからIDを取得
-	err := handlerutil.ParseJsonBody(r, &jsonUser)
+	loginUser, err := usercontroller.UserAuthorization(r.Header.Get("x-token"))
+
+	//jsonボディから新しい名前を取得
+	rawRequest := request{}
+	err = handlerutil.ParseJsonBody(r, &rawRequest)
 	if err != nil {
 		return err
 	}
-	loginUser, err := usercontroller.GetOneUser(jsonUser.Id)
-	if err != nil {
-		return err
-	}
-	loginUser.Name = jsonUser.Name
+
+	loginUser.Name = rawRequest.Name
 	err = usercontroller.UpdateUser(loginUser)
 	if err != nil {
 		return err
@@ -73,10 +73,6 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//秘密鍵生成用のシード(128桁)
-//TODO: 文字列を途中で折り返す方法を見つける
-const secretKey = "276538ba123456091749759837598027127498375957987902740982774983748a276538ba12345609174975983759802712749837595798790274098273748a"
-
 //UserCreateImpl : userhandler.UserCreate()の処理の本体.ユーザー情報取得を行う.
 func userCreateImpl(r *http.Request) (string, error) {
 	jsonUser := usermodel.User{}
@@ -103,24 +99,11 @@ func userCreateImpl(r *http.Request) (string, error) {
 	UUID, _ := uuid.NewUUID()
 	id := UUID.String()
 	jsonUser.Id = id
+	//トークンを生成してDBに保存
+	token := CreateToken(jsonUser)
+	jsonUser.Token = token
 
-	//ここから認証トークン生成部
-	//認証トークンの生成方法は以下のサイトを参考にしている
-	//URL: https://qiita.com/GpAraki/items/801cb4654ce109d49ec9
-	b, err := hex.DecodeString(secretKey)
-	if err != nil {
-		return "", err
-	}
-	privateKey := ed25519.PrivateKey(b)
-
-	jsonUser.PrivateKey = privateKey
-
-	err = usermodel.CreateUser(jsonUser)
-	if err != nil {
-		return "", err
-	}
-	//トークンを生成して返す
-	token, err := CreateToken(jsonUser)
+	err = usercontroller.CreateUser(jsonUser)
 	if err != nil {
 		return "", err
 	}
@@ -133,21 +116,9 @@ func userCreateImpl(r *http.Request) (string, error) {
 func CheckPasetoAuth(w http.ResponseWriter, r *http.Request) (string, paseto.JSONToken, string, error) {
 
 	token := r.Header.Get("x-token")
+	//TODO:トークンがDBにあるかチェック
 	var newJsonToken paseto.JSONToken
 	var newFooter string
-
-	//公開鍵を生成
-	// b, err := hex.DecodeString(secretKey)
-	// if err != nil {
-	// 	return "", paseto.JSONToken{}, "", err
-	// }
-	// publicKey := ed25519.PrivateKey(b).Public()
-	// //TODO:トークンを検証
-	// err = paseto.NewV2().Verify(token, publicKey, &newJsonToken, &newFooter)
-	// if err != nil {
-	// 	log.Print("error when verify")
-	// 	return "", paseto.JSONToken{}, "", err
-	// }
 
 	return token, newJsonToken, newFooter, nil
 
@@ -226,14 +197,11 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 //UserSignIn : ユーザーのサインイン処理を行う.
 func UserSignIn(w http.ResponseWriter, r *http.Request) (usermodel.User, error) {
-	loginUser := usermodel.User{}
-	loginUser.MailAddress = r.Header.Get("mailaddress")
-	loginUser.PassWord = r.Header.Get("password")
-	loginUser.Id = r.Header.Get("id")
-	//メールアドレスとパスワードを照合＋DBにある時のみサインインを通す
-	user, err := usercontroller.UserAuthorization(loginUser.Id, loginUser.MailAddress, loginUser.PassWord)
+	token := r.Header.Get("x-token")
+	//トークンを照合＋DBにある時のみサインインを通す
+	user, err := usercontroller.UserAuthorization(token)
 	if err != nil {
-		//メールアドレスとパスワードの組がDBになければエラーを返す
+		//トークンがDBになければエラーを返す
 		return usermodel.User{}, err
 	}
 	return user, nil
@@ -241,25 +209,19 @@ func UserSignIn(w http.ResponseWriter, r *http.Request) (usermodel.User, error) 
 }
 
 //トークン生成用の定数類
-//フッター
-const footer = "eyJraWQiOiAiMTIzNDUifQ"
+//トークン生成元
+const seedLetters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
-//トークンの有効期限
-const expirationTime = 30 * time.Minute
+//トークンの桁数
+const tokenChrSize = 10
 
 //CreateToken : トークンを生成する.
-func CreateToken(user usermodel.User) (string, error) {
-	now := time.Now()
-	expiration := time.Now().Add(expirationTime)
-	jsonToken := paseto.JSONToken{
-		Expiration: expiration, // 失効日時
-		IssuedAt:   now,        // 発行日時
-		NotBefore:  now,        // 有効化日時
+func CreateToken(user usermodel.User) string {
+	token := make([]byte, tokenChrSize)
+	//関数実行ごとにシードを変更
+	rand.Seed(time.Now().UnixNano())
+	for i := range token {
+		token[i] = seedLetters[rand.Intn(len(seedLetters))]
 	}
-	jsonToken.Set("id", user.Id)
-
-	tokenCreator := paseto.NewV2()
-	//トークンを生成
-	token, err := tokenCreator.Sign(user.PrivateKey, jsonToken, footer)
-	return token, err
+	return string(token)
 }
