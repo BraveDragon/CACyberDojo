@@ -26,6 +26,7 @@ func EnableCorsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		w.Header().Add("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Content-Type", "application/json")
 		//プリフライトリクエストの場合の処理
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

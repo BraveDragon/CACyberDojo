@@ -64,6 +64,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		handlerutil.ErrorLoggingAndWriteHeader(w, err, http.StatusInternalServerError)
 		return
 	}
+
 	_, err = w.Write(resResult)
 	//w.Write()のエラーチェック
 	if err != nil {
@@ -176,6 +177,7 @@ func UserGetImpl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//ユーザーID、ユーザー名、ユーザーのスコア、ランキングをjson形式で出力
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(resResult)
 
 	if err != nil {
