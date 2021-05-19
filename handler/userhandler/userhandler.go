@@ -22,6 +22,9 @@ func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	}
 	// 誰がログインしているかをチェック
 	loginUser, err := usercontroller.UserAuthorization(r.Header.Get("x-token"))
+	if err != nil {
+		return err
+	}
 
 	//jsonボディから新しい名前を取得
 	rawRequest := request{}

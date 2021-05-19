@@ -37,6 +37,9 @@ func gachaDrawHandlerImpl(w http.ResponseWriter, r *http.Request) error {
 	//何のガチャを何回引くかをリクエストで受け取る
 	gachaRequest := GachaRequest{}
 	err := handlerutil.ParseJsonBody(r, &gachaRequest)
+	if err != nil {
+		return err
+	}
 
 	user, err := usercontroller.UserAuthorization(r.Header.Get("x-token"))
 	if err != nil {
