@@ -17,7 +17,7 @@ import (
 
 //UserUpdateImpl : ユーザー情報の更新.UserUpdate()の処理の本体.
 func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
-	type request struct {
+	type uuRequest struct {
 		Name string `json:"name"`
 	}
 	// 誰がログインしているかをチェック
@@ -27,7 +27,7 @@ func userUpdateImpl(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	//jsonボディから新しい名前を取得
-	rawRequest := request{}
+	rawRequest := uuRequest{}
 	err = handlerutil.ParseJsonBody(r, &rawRequest)
 	if err != nil {
 		return err
